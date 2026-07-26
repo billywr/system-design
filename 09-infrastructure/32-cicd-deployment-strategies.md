@@ -217,7 +217,7 @@ sequenceDiagram
     CI->>CI: docker build --cache-from
     CI->>CI: Run compile, bundle, minify
     CI->>REG: Push image:myapp:abc123
-    CI->>VCS: Status check ✅
+    CI->>VCS: Status check Yes
     Note over REG: Image digest sha256:def... is immutable deploy unit
 ```
 
@@ -275,9 +275,9 @@ flowchart TB
     SEC --> GATE
     IaC_SCAN --> GATE
 
-    GATE -->|Critical CVE| BLOCK[❌ Block Deploy]
-    GATE -->|Low severity| WARN[⚠️ Warn + Ticket]
-    GATE -->|Clean| PASS[✅ Proceed]
+    GATE -->|Critical CVE| BLOCK[No Block Deploy]
+    GATE -->|Low severity| WARN[Warning: Warn + Ticket]
+    GATE -->|Clean| PASS[Yes Proceed]
 ```
 
 **Interview framing:**
@@ -341,7 +341,7 @@ sequenceDiagram
     Note over OLD: kubectl: terminate all v1
     OLD--xOLD: All v1 killed
 
-    Note over LB: ⚠️ DOWNTIME WINDOW
+    Note over LB: Warning: DOWNTIME WINDOW
     LB--xLB: No healthy backends
 
     Note over NEW: Start all v2 pods
@@ -410,10 +410,10 @@ sequenceDiagram
 
     K8s->>V2: Create new pod
     V2->>V2: Start app, run startup probe
-    V2->>LB: Readiness probe ✅ → join pool
+    V2->>LB: Readiness probe Yes → join pool
     K8s->>V1: Send SIGTERM
     V1->>V1: preStop hook: drain connections (15s)
-    V1->>LB: Readiness probe ❌ → leave pool
+    V1->>LB: Readiness probe No → leave pool
     V1--xV1: Terminate after grace period
 ```
 
@@ -483,7 +483,7 @@ sequenceDiagram
     LB->>Green: 100% traffic
     Green->>MON: Watch error rate, latency
     alt Metrics healthy
-        MON-->>Ops: ✅ Green stable — decommission Blue
+        MON-->>Ops: Yes Green stable — decommission Blue
     else Metrics degraded
         Ops->>LB: Instant rollback: Green → Blue
         Note over Blue: Rollback in seconds (DNS/LB flip)
@@ -770,11 +770,11 @@ graph LR
 
 | Change Type | Safe During Rolling? | Pattern |
 |-------------|---------------------|---------|
-| Add optional API field | ✅ Yes | New field ignored by old clients |
-| Add DB column (nullable) | ✅ Yes | Expand phase |
-| Remove API field | ❌ No | Deprecate → wait → remove (contract) |
-| Rename DB column | ❌ No | Expand-contract: add new, dual-write, migrate, drop old |
-| Change response format | ❌ No | Version API (`/v1`, `/v2`) or content negotiation |
+| Add optional API field | Yes | New field ignored by old clients |
+| Add DB column (nullable) | Yes | Expand phase |
+| Remove API field | No | Deprecate → wait → remove (contract) |
+| Rename DB column | No | Expand-contract: add new, dual-write, migrate, drop old |
+| Change response format | No | Version API (`/v1`, `/v2`) or content negotiation |
 
 ### 4.4 Load Balancer Coordination
 
@@ -887,12 +887,12 @@ sequenceDiagram
 
 | Migration Type | Online? | Deploy Coordination | Tool Examples |
 |---------------|---------|---------------------|---------------|
-| **Add nullable column** | ✅ Yes | Any deploy order | Flyway, Liquibase, gh-ost |
-| **Add index** | ✅ Yes (concurrently) | No app change needed | `CREATE INDEX CONCURRENTLY` |
-| **Rename column** | ❌ Multi-phase | Expand-contract (4 deploys) | gh-ost, pt-online-schema-change |
-| **Change column type** | ❌ Multi-phase | Add new col → migrate → drop | gh-ost |
-| **Add NOT NULL constraint** | ⚠️ Phased | Add nullable → backfill → add constraint | Multi-step |
-| **Table partition** | ⚠️ Complex | Often maintenance window | pg_partman |
+| **Add nullable column** | Yes | Any deploy order | Flyway, Liquibase, gh-ost |
+| **Add index** | Yes (concurrently) | No app change needed | `CREATE INDEX CONCURRENTLY` |
+| **Rename column** | No Multi-phase | Expand-contract (4 deploys) | gh-ost, pt-online-schema-change |
+| **Change column type** | No Multi-phase | Add new col → migrate → drop | gh-ost |
+| **Add NOT NULL constraint** | Warning: Phased | Add nullable → backfill → add constraint | Multi-step |
+| **Table partition** | Warning: Complex | Often maintenance window | pg_partman |
 
 ### 5.3 Online Schema Change Tools
 
@@ -1030,11 +1030,11 @@ quadrantChart
 
 | Situation | Rollback | Roll Forward |
 |-----------|----------|-------------|
-| Bad binary causing 5xx | ✅ Immediate rollback | — |
-| Minor UI bug | — | ✅ Fix in next deploy |
-| DB migration already at CONTRACT phase | ❌ Cannot rollback schema | ✅ Fix data + forward |
-| Security vulnerability in new version | ✅ Rollback immediately | Patch ASAP if rollback slow |
-| Canary shows 0.5% error rate increase | ⚠️ Investigate; may be noise | Check sample size |
+| Bad binary causing 5xx | Yes Immediate rollback | — |
+| Minor UI bug | — | Yes Fix in next deploy |
+| DB migration already at CONTRACT phase | No Cannot rollback schema | Yes Fix data + forward |
+| Security vulnerability in new version | Yes Rollback immediately | Patch ASAP if rollback slow |
+| Canary shows 0.5% error rate increase | Warning: Investigate; may be noise | Check sample size |
 
 ### 6.4 Immutable Infrastructure and Rollback
 
@@ -1632,6 +1632,7 @@ graph TB
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((CI/CD & Deploy))
     Pipeline

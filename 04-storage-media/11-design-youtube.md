@@ -40,6 +40,7 @@ YouTube is a **read-heavy media platform** with an **asynchronous write pipeline
 5. **Engage** — comments, likes, view counts at billions of events/day
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((YouTube))
     Upload Pipeline
@@ -1001,7 +1002,7 @@ Feedback loop:
 | Approach | Pros | Cons |
 |----------|------|------|
 | Proxy through API | Full control, validation | Bottleneck at 30 GB/s |
-| Direct-to-S3 signed URL ✓ | Scales infinitely | Less inline validation |
+| Direct-to-S3 signed URL yes | Scales infinitely | Less inline validation |
 | Peer-to-peer upload | Zero server bandwidth | Unreliable, complex |
 
 ### 9.2 Transcoding: Real-time vs Batch
@@ -1009,7 +1010,7 @@ Feedback loop:
 | Approach | Latency | Cost | Quality |
 |----------|---------|------|---------|
 | Real-time (live) | Seconds | Very high GPU | Lower quality |
-| Near-line batch ✓ | Minutes | Optimized GPU fleet | Best quality |
+| Near-line batch yes | Minutes | Optimized GPU fleet | Best quality |
 | Pre-transcode all codecs | Hours ahead | Wasteful for unwatched | Over-provisioned |
 
 ### 9.3 View Counts: Exact vs Approximate
@@ -1017,7 +1018,7 @@ Feedback loop:
 | Approach | Accuracy | Scale | Cost |
 |----------|----------|-------|------|
 | Exact per-event SQL | 100% | Doesn't scale | Very high |
-| Redis counter + flush ✓ | 99.9% | 145K/sec | Medium |
+| Redis counter + flush yes | 99.9% | 145K/sec | Medium |
 | HyperLogLog | ±2% | Unlimited | Very low |
 | No count (display estimate) | N/A | Infinite | Zero |
 
@@ -1025,7 +1026,7 @@ Feedback loop:
 
 | Store | Best For |
 |-------|----------|
-| Sharded MySQL ✓ | Threaded queries, ACID, moderate scale |
+| Sharded MySQL yes | Threaded queries, ACID, moderate scale |
 | Cassandra | Write-heavy, time-series, eventual consistency |
 | DynamoDB | Fully managed, key-value access |
 

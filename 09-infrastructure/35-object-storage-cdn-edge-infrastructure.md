@@ -642,14 +642,14 @@ sequenceDiagram
 
     Note over U,O: Cache HIT — 90% of requests
     U->>E: GET /photos/user1/abc/thumb_320.jpg
-    E->>E: Cache lookup: HIT ✓
+    E->>E: Cache lookup: HIT yes
     E-->>U: 200 OK (12ms)
 
     Note over U,O: Cache MISS — 10% of requests
     U->>E: GET /photos/user99/xyz/thumb_320.jpg
-    E->>E: Cache lookup: MISS ✗
+    E->>E: Cache lookup: MISS no
     E->>S: Fetch from shield
-    S->>S: Cache lookup: MISS ✗
+    S->>S: Cache lookup: MISS no
     S->>O: GET /photos/user99/xyz/thumb_320.jpg
     O-->>S: 200 OK (200ms from S3)
     S->>S: Cache object (TTL: 24h)
@@ -1667,6 +1667,7 @@ graph TB
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Object Storage<br/>CDN & Edge))
     Object Storage

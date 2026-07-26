@@ -129,6 +129,7 @@ graph TB
 ### 2.2 Core Responsibilities
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((API Gateway))
     Routing
@@ -317,10 +318,10 @@ sequenceDiagram
 
     U->>GW: POST /events/123/purchase
     GW->>REDIS: INCR rate:user:456:minute
-    REDIS-->>GW: count=3 (limit=5) ✓
+    REDIS-->>GW: count=3 (limit=5) yes
 
     GW->>REDIS: INCR rate:global:second
-    REDIS-->>GW: count=45001 (limit=50000) ✗
+    REDIS-->>GW: count=45001 (limit=50000) no
 
     GW-->>U: 429 Too Many Requests<br/>Retry-After: 2<br/>X-RateLimit-Remaining: 0
 
@@ -2091,6 +2092,7 @@ graph TB
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((API Gateway<br/>& Service Mesh))
     API Gateway

@@ -86,6 +86,7 @@ graph LR
 ### 2.1 The Database Landscape
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Database Types))
     Relational SQL
@@ -1904,6 +1905,7 @@ When designing any system, walk through this checklist:
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Database Selection))
     Relational

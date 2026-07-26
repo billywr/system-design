@@ -518,8 +518,8 @@ This is the **#1 correctness** requirement in the interview.
 - Read-modify-write race:
 
 ```
-Guest A: read Aug 1-5 available ✓
-Guest B: read Aug 1-5 available ✓
+Guest A: read Aug 1-5 available yes
+Guest B: read Aug 1-5 available yes
 Guest A: write booked
 Guest B: write booked  ← DOUBLE BOOKING
 ```

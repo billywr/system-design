@@ -198,7 +198,7 @@ graph TB
 | | Histogram | Summary |
 |---|-----------|---------|
 | **Quantile accuracy** | Approximate (per-bucket) | Exact (per-instance) |
-| **Aggregation across instances** | ✅ Yes — merge buckets | ❌ No — quantiles don't aggregate |
+| **Aggregation across instances** | Yes — merge buckets | No — quantiles don't aggregate |
 | **Recommendation** | **Default choice** | Legacy; avoid for new systems |
 
 ### 3.2 Prometheus Architecture
@@ -322,8 +322,8 @@ graph TB
         METRIC --> L1[method: GET, POST, PUT<br/>3 values]
         L1 --> L2[status: 200, 404, 500, ...<br/>~10 values]
         L2 --> L3[service: api, auth, payment<br/>~20 values]
-        L3 --> L4[user_id: 1, 2, 3, ...<br/>⚠️ 10M values]
-        L4 --> BLOW[10M × 10 × 20 × 3<br/>= 6 BILLION time series<br/>💥 Storage explodes]
+        L3 --> L4[user_id: 1, 2, 3, ...<br/>Warning: 10M values]
+        L4 --> BLOW[10M × 10 × 20 × 3<br/>= 6 BILLION time series<br/>Critical: Storage explodes]
     end
 ```
 
@@ -342,10 +342,10 @@ Cardinality calculation:
   series_count = label1_values × label2_values × ... × labelN_values
 
   http_requests_total{method, status, service}
-    = 3 × 10 × 20 = 600 series ✅
+    = 3 × 10 × 20 = 600 series Yes
 
   http_requests_total{method, status, service, user_id}
-    = 3 × 10 × 20 × 10,000,000 = 6B series ❌
+    = 3 × 10 × 20 × 10,000,000 = 6B series No
 ```
 
 ### 3.6 Metric Instrumentation Best Practices
@@ -717,7 +717,7 @@ graph TB
 
 | Strategy | Sample Rate | Storage Cost | Debug Coverage |
 |----------|------------|-------------|----------------|
-| **Always sample** | 100% | 💥 Prohibitive at scale | Perfect |
+| **Always sample** | 100% | Critical: Prohibitive at scale | Perfect |
 | **Probabilistic 1%** | 1% | Manageable | 1 in 100 requests |
 | **Probabilistic 0.1%** | 0.1% | Low | 1 in 1000 — may miss rare bugs |
 | **Tail-based sampling** | Decide after request completes | Medium | Sample all errors + slow; 1% of fast |
@@ -895,12 +895,12 @@ graph TB
 
 | Alert Type | Example | Actionable? | Recommendation |
 |-----------|---------|-------------|----------------|
-| **Symptom** | Error rate > 1% for 5 min | ✅ Users affected | Page on-call |
-| **Symptom** | p99 latency > SLO for 10 min | ✅ Users affected | Page on-call |
-| **Symptom** | SLO burn rate > 14.4× | ✅ Budget at risk | Page on-call |
-| **Cause** | CPU > 90% | ❓ Maybe user impact | Dashboard only |
-| **Cause** | Disk > 80% | ❓ Not yet user impact | Ticket if trending |
-| **Cause** | Pod restarted | ❓ Maybe self-healed | Log, don't page |
+| **Symptom** | Error rate > 1% for 5 min | Yes Users affected | Page on-call |
+| **Symptom** | p99 latency > SLO for 10 min | Yes Users affected | Page on-call |
+| **Symptom** | SLO burn rate > 14.4× | Yes Budget at risk | Page on-call |
+| **Cause** | CPU > 90% |  Maybe user impact | Dashboard only |
+| **Cause** | Disk > 80% |  Not yet user impact | Ticket if trending |
+| **Cause** | Pod restarted |  Maybe self-healed | Log, don't page |
 
 ### 7.2 Alert Severity Levels
 
@@ -1374,7 +1374,7 @@ graph TB
 | **Elasticsearch (logs)** | High | Very high (full-text) | High | High (sharding) | Complex log analytics |
 | **Grafana Loki (logs)** | Low | Medium (LogQL) | Medium | High | K8s logs, cost-sensitive |
 | **Jaeger (traces)** | Medium | High | Medium | Medium | Open-source tracing |
-| **100% trace sampling** | 💥 Very high | Perfect coverage | Low | Poor | Dev/staging only |
+| **100% trace sampling** | Critical: Very high | Perfect coverage | Low | Poor | Dev/staging only |
 | **1% head-based sampling** | Low | Statistical coverage | Low | Good | Production default |
 | **Tail-based sampling** | Medium | Error/slow coverage | Medium | Good | Production recommended |
 | **Structured JSON logs** | Medium | High (field query) | Low | Good | Always recommend |
@@ -1513,6 +1513,7 @@ graph TB
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Observability))
     Three Pillars

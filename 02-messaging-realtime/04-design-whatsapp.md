@@ -49,7 +49,7 @@ In an interview, you are **not** rebuilding WhatsApp's full product (Status, Cha
 | E2E encryption | Signal Protocol; server stores ciphertext only |
 | Online delivery | Real-time push via persistent connection |
 | Offline delivery | Store-and-forward; sync on reconnect |
-| Read receipts | Delivered ✓✓, Read ✓✓ (blue) |
+| Read receipts | Delivered (checkmarks), Read (checkmarks) (blue) |
 | Message ordering | Per-conversation causal ordering |
 | Multi-device | Phone + linked devices (desktop/web) |
 | Presence | Online / last seen (optional privacy) |
@@ -824,7 +824,7 @@ sequenceDiagram
     R->>SV: READ { session_id, last_read_seq: 105 }
     SV->>SV: Update cursor for reader
     SV->>S: RECEIPT batch for messages ≤ 105
-    S->>S: Update UI ✓✓ blue
+    S->>S: Update UI (checkmarks) blue
 ```
 
 Privacy: Users can disable read receipts (but then can't see others' either — reciprocity).

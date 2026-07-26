@@ -764,15 +764,15 @@ sequenceDiagram
 graph TB
     subgraph Work Queue — one consumer gets message
         P1[Producer] --> Q1[Queue]
-        Q1 --> W1[Worker 1 ✓]
-        Q1 -.-> W2[Worker 2 ✗]
+        Q1 --> W1[Worker 1 yes]
+        Q1 -.-> W2[Worker 2 no]
     end
 
     subgraph Fan-Out — all subscribers get copy
         P2[Producer] --> TOPIC[Topic / Fanout]
-        TOPIC --> S1[Email ✓]
-        TOPIC --> S2[Analytics ✓]
-        TOPIC --> S3[Audit ✓]
+        TOPIC --> S1[Email yes]
+        TOPIC --> S2[Analytics yes]
+        TOPIC --> S3[Audit yes]
     end
 ```
 
@@ -914,7 +914,7 @@ sequenceDiagram
     Q->>I: Reserve inventory
     I-->>Q: InventoryReserved
     Q->>S: Create shipment
-    S-->>Q: ShipmentFailed ❌
+    S-->>Q: ShipmentFailed No
     Q->>I: Compensate: ReleaseInventory
     Q->>P: Compensate: RefundPayment
     Q->>O: Compensate: CancelOrder
@@ -1089,12 +1089,12 @@ flowchart TD
     Q --> MET[Metrics Pipeline]
     Q --> TASK[Task / Job Processing]
 
-    INSTA --> K1[Kafka ✓<br/>or RabbitMQ fanout at moderate scale]
-    UBER --> K2[Kafka ✓<br/>high throughput geo-stream]
-    PAY --> R1[RabbitMQ + DLQ ✓<br/>routing + per-message ACK]
-    CHAT --> R2[Redis Pub/Sub ✓<br/>or dedicated WebSocket gateway]
-    MET --> K3[Kafka ✓<br/>log aggregation at scale]
-    TASK --> S1[SQS ✓<br/>or RabbitMQ work queue]
+    INSTA --> K1[Kafka yes<br/>or RabbitMQ fanout at moderate scale]
+    UBER --> K2[Kafka yes<br/>high throughput geo-stream]
+    PAY --> R1[RabbitMQ + DLQ yes<br/>routing + per-message ACK]
+    CHAT --> R2[Redis Pub/Sub yes<br/>or dedicated WebSocket gateway]
+    MET --> K3[Kafka yes<br/>log aggregation at scale]
+    TASK --> S1[SQS yes<br/>or RabbitMQ work queue]
 ```
 
 ### 17.2 Detailed Scenario Matrix
@@ -1276,12 +1276,12 @@ graph TD
 
 | System | Throughput | Latency | Durability | Ops Complexity | Ordering | Replay | Best Interview Answer |
 |--------|-----------|---------|------------|---------------|----------|--------|----------------------|
-| **Kafka** | ★★★★★ | ★★★ | ★★★★★ | ★★★★ | Per partition | Yes | Event streams, metrics, CDC |
-| **RabbitMQ** | ★★★ | ★★★★ | ★★★★ | ★★★ | Per queue | No | Task queues, routing, payments |
-| **SQS** | ★★★★ | ★★★ | ★★★★ | ★ | Standard: no | No | AWS serverless jobs |
-| **Redis Pub/Sub** | ★★★★★ | ★★★★★ | ★ | ★★ | Per channel | No | Real-time ephemeral |
-| **Pulsar** | ★★★★★ | ★★★ | ★★★★★ | ★★★★★ | Per key | Yes | Kafka alternative + geo |
-| **NATS** | ★★★★★ | ★★★★★ | ★★ (JetStream ★★★★) | ★★ | Per subject | JetStream | Low-latency mesh |
+| **Kafka** | 5/5 | 3/5 | 5/5 | 4/5 | Per partition | Yes | Event streams, metrics, CDC |
+| **RabbitMQ** | 3/5 | 4/5 | 4/5 | 3/5 | Per queue | No | Task queues, routing, payments |
+| **SQS** | 4/5 | 3/5 | 4/5 | 1/5 | Standard: no | No | AWS serverless jobs |
+| **Redis Pub/Sub** | 5/5 | 5/5 | 1/5 | 2/5 | Per channel | No | Real-time ephemeral |
+| **Pulsar** | 5/5 | 3/5 | 5/5 | 5/5 | Per key | Yes | Kafka alternative + geo |
+| **NATS** | 5/5 | 5/5 | 2/5 (JetStream 4/5) | 2/5 | Per subject | JetStream | Low-latency mesh |
 
 ---
 
@@ -1409,6 +1409,7 @@ graph TD
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Message Queues))
     Systems

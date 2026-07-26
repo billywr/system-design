@@ -485,7 +485,7 @@ limit = 100 → ALLOW (remaining: 60)
 |-----------|-----------------|--------|----------|------------|
 | Fixed window | Poor (boundary) | O(1) | Low | Simple |
 | Sliding window log | Perfect | O(n) | Exact | Medium |
-| Sliding window counter | Good | O(1) | ~99.99% | Medium ★ |
+| Sliding window counter | Good | O(1) | ~99.99% | Medium 1/5 |
 | Token bucket | Configurable burst | O(1) | Good | Medium |
 
 ```mermaid
@@ -576,7 +576,7 @@ flowchart TD
 |--------|-------------|
 | **Fail-open** | Internal services; availability > abuse protection |
 | **Fail-closed** | Payment APIs; abuse > availability |
-| **Fail-local** | Best compromise for public APIs ★ |
+| **Fail-local** | Best compromise for public APIs 1/5 |
 
 ---
 

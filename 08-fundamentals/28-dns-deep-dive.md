@@ -474,7 +474,7 @@ graph TB
     L2 --> L3[Browser Cache<br/>min TTL, browser policy)]
     L3 --> L4[Application Cache<br/>optional: JVM, connection pool]
 
-    style AUTH fill:#e8f5e9
+    style AUTH fill:#D2691E,color:#ffffff
     style L1 fill:#fff3e0
     style L2 fill:#fff3e0
     style L3 fill:#fff3e0
@@ -625,7 +625,7 @@ flowchart LR
     USER[User in Tokyo]
     USER --> R53[Route 53<br/>Latency Policy]
     R53 --> M[Measure latency matrix]
-    M --> AP[ap-northeast-1<br/>12ms ✓ selected]
+    M --> AP[ap-northeast-1<br/>12ms yes selected]
     M --> US[us-east-1<br/>180ms]
     M --> EU[eu-west-1<br/>220ms]
     AP --> ALB[Regional ALB]
@@ -1407,6 +1407,7 @@ flowchart TD
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((DNS Deep Dive))
     Hierarchy

@@ -333,10 +333,10 @@ erDiagram
 
 | Vehicle \ Spot | Motorcycle | Compact | Regular | Large | Handicap | EV |
 |----------------|:----------:|:-------:|:-------:|:-----:|:--------:|:--:|
-| **Motorcycle** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Car** | ❌ | ✅ | ✅ | ✅ | ❌* | ✅ |
-| **Large/SUV** | ❌ | ❌ | ❌ | ✅ | ❌* | ❌ |
-| **Handicap car** | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Motorcycle** | Yes | Yes | Yes | Yes | No | No |
+| **Car** | No | Yes | Yes | Yes | No* | Yes |
+| **Large/SUV** | No | No | No | Yes | No* | No |
+| **Handicap car** | No | Yes | Yes | Yes | Yes | Yes |
 
 *Handicap spots require valid handicap permit on vehicle.
 

@@ -413,12 +413,12 @@ graph TB
 
 | Routing Key Published | Binding Pattern | Match? |
 |----------------------|-----------------|--------|
-| `order.created` | `order.created` | ✅ (direct exact) |
-| `order.created` | `order.*` | ✅ |
-| `order.created.us` | `order.*` | ❌ (* is exactly one word) |
-| `order.created.us` | `order.#` | ✅ (# is zero or more words) |
-| `payment.us.charge` | `payment.#` | ✅ |
-| `payment.us.charge` | `payment.*.charge` | ✅ |
+| `order.created` | `order.created` | Yes (direct exact) |
+| `order.created` | `order.*` | Yes |
+| `order.created.us` | `order.*` | No (* is exactly one word) |
+| `order.created.us` | `order.#` | Yes (# is zero or more words) |
+| `payment.us.charge` | `payment.#` | Yes |
+| `payment.us.charge` | `payment.*.charge` | Yes |
 
 ### 4.6 RPC Pattern (Request-Reply)
 
@@ -1197,21 +1197,21 @@ graph LR
 
 ```
 USE RABBITMQ when:
-  ✓ Task queue / job processing
-  ✓ Complex routing (topic, headers)
-  ✓ RPC / request-reply between services
-  ✓ Per-message TTL, priority, DLQ
-  ✓ Moderate throughput (< 50K/sec)
-  ✓ Low latency delivery (< 10ms)
-  ✓ Message deleted after processing
+  yes Task queue / job processing
+  yes Complex routing (topic, headers)
+  yes RPC / request-reply between services
+  yes Per-message TTL, priority, DLQ
+  yes Moderate throughput (< 50K/sec)
+  yes Low latency delivery (< 10ms)
+  yes Message deleted after processing
 
 DON'T USE RABBITMQ when:
-  ✗ Need event replay / audit log
-  ✗ Millions events/sec
-  ✗ Multiple independent readers on same data stream
-  ✗ Long retention (days/weeks) as primary store
-  ✗ Stream processing with offset rewind
-  ✗ Zero ops preference → use SQS
+  no Need event replay / audit log
+  no Millions events/sec
+  no Multiple independent readers on same data stream
+  no Long retention (days/weeks) as primary store
+  no Stream processing with offset rewind
+  no Zero ops preference → use SQS
 ```
 
 ### Pattern → Exchange Quick Reference

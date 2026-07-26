@@ -1150,18 +1150,18 @@ graph TB
 
 ```
 USE KAFKA when:
-  ✓ Throughput > 10K events/sec sustained
-  ✓ Multiple independent consumers on same data
-  ✓ Need replay / event sourcing
-  ✓ Stream processing (Flink, Kafka Streams)
-  ✓ Decouple producer burst from consumer speed
+  yes Throughput > 10K events/sec sustained
+  yes Multiple independent consumers on same data
+  yes Need replay / event sourcing
+  yes Stream processing (Flink, Kafka Streams)
+  yes Decouple producer burst from consumer speed
 
 DON'T USE KAFKA when:
-  ✗ Simple task queue (< 1K/sec)
-  ✗ Complex per-message routing
-  ✗ Sub-10ms latency requirement
-  ✗ Per-message TTL or priority
-  ✗ Team can't operate distributed log infra
+  no Simple task queue (< 1K/sec)
+  no Complex per-message routing
+  no Sub-10ms latency requirement
+  no Per-message TTL or priority
+  no Team can't operate distributed log infra
 ```
 
 ---

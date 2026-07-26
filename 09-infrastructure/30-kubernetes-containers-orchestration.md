@@ -1239,7 +1239,7 @@ flowchart TB
 | **Batch job** | Job | Fixed parallelism | emptyDir |
 | **Scheduled task** | CronJob | N/A | None |
 | **Node agent (logging)** | DaemonSet | 1 per node | hostPath / emptyDir |
-| **Database** | ❌ Use RDS | N/A | Managed |
+| **Database** | No Use RDS | N/A | Managed |
 | **Code sandbox** | Job (run-to-completion) | Parallelism: N | emptyDir (ephemeral) |
 
 ### 10.3 Resource Sizing Guidelines
@@ -1597,12 +1597,12 @@ External traffic    → Ingress (HTTP) or LoadBalancer Service (TCP)
 │    6. Multi-AZ → topologySpreadConstraints                         │
 ├─────────────────────────────────────────────────────────────────────┤
 │  WHEN TO MENTION K8s:                                               │
-│    ✅ 10+ microservices, independent scaling/deploy                  │
-│    ✅ Zero-downtime rolling deploys                                  │
-│    ✅ Batch jobs (code judge, ETL)                                   │
-│    ❌ Simple CRUD (URL shortener, paste bin)                        │
-│    ❌ Serverless fits (event-driven, spiky)                          │
-│    ❌ Databases (always managed: RDS, ElastiCache)                   │
+│    Yes 10+ microservices, independent scaling/deploy                  │
+│    Yes Zero-downtime rolling deploys                                  │
+│    Yes Batch jobs (code judge, ETL)                                   │
+│    No Simple CRUD (URL shortener, paste bin)                        │
+│    No Serverless fits (event-driven, spiky)                          │
+│    No Databases (always managed: RDS, ElastiCache)                   │
 ├─────────────────────────────────────────────────────────────────────┤
 │  KEY NUMBERS:                                                       │
 │    Pod schedule: 1-10s | New node: 2-5min | Node failure: ~5min    │
