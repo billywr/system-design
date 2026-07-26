@@ -34,6 +34,7 @@
 Dropbox is a **personal cloud storage + sync** product. The core technical challenge is not "store files in S3" — it is **keeping a distributed filesystem consistent** across laptops, phones, and the cloud while minimizing bandwidth, storage cost, and user-visible conflicts.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Dropbox))
     Sync Engine
@@ -748,9 +749,9 @@ flowchart LR
     B2 --> H2
 
     subgraph Server
-        S0["aaa ✓ exists"]
-        S1["bbb ✓ exists"]
-        S2["ddd ✗ new hash"]
+        S0["aaa yes exists"]
+        S1["bbb yes exists"]
+        S2["ddd no new hash"]
     end
 
     H0 --> S0
@@ -969,7 +970,7 @@ sequenceDiagram
 | Block Size | Dedup Granularity | Metadata Overhead | Small File Waste |
 |------------|-------------------|-------------------|------------------|
 | 1 MB | Fine | High | Low |
-| 4 MB | Balanced ✓ | Medium | Medium |
+| 4 MB | Balanced yes | Medium | Medium |
 | 64 MB | Coarse | Low | High |
 
 **Choice:** 4 MB — industry standard (Dropbox, Bittorrent, S3 multipart).

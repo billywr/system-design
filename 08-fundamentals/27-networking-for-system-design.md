@@ -361,8 +361,8 @@ sequenceDiagram
 graph TB
     subgraph HTTP/2 Head-of-Line Blocking at TCP Layer
         TCP2[Single TCP Connection]
-        TCP2 --> P1[Packet 1: Stream 1 data ✓]
-        TCP2 --> P2[Packet 2: Stream 3 data ✗ LOST]
+        TCP2 --> P1[Packet 1: Stream 1 data yes]
+        TCP2 --> P2[Packet 2: Stream 3 data no LOST]
         TCP2 --> P3[Packet 3: Stream 2 data — BLOCKED waiting for P2]
         TCP2 --> P4[Packet 4: Stream 4 data — BLOCKED waiting for P2]
         P2 -.->|TCP retransmit| P2R[Packet 2 retransmitted]
@@ -1762,6 +1762,7 @@ graph TB
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Networking<br/>for System Design))
     Protocols

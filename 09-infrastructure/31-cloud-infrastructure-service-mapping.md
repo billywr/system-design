@@ -1069,7 +1069,7 @@ graph LR
     subgraph "Low Scale — 100 RPS"
         L1[Lambda: $5/mo]
         L2[EC2 t3.micro: $8/mo]
-        L3[EKS: $73+ /mo ❌]
+        L3[EKS: $73+ /mo No]
     end
 
     subgraph "Medium Scale — 5K RPS"
@@ -1079,9 +1079,9 @@ graph LR
     end
 
     subgraph "High Scale — 100K RPS"
-        H1[Lambda: $5000+/mo ❌]
+        H1[Lambda: $5000+/mo No]
         H2[EC2 ASG 20×m5.xlarge: $2500/mo]
-        H3[EKS 50 nodes: $3000/mo ✓]
+        H3[EKS 50 nodes: $3000/mo yes]
     end
 ```
 

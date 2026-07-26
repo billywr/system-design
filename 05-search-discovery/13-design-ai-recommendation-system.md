@@ -151,6 +151,7 @@ flowchart LR
 ### 2.3 Requirements Summary Diagram
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((AI Recommendations))
     Candidate Gen
@@ -986,11 +987,11 @@ score_final = w1 × P(click)
 
 | Source | Recall | Latency | Cold Start |
 |--------|--------|---------|------------|
-| Two-tower ANN | High | 5 ms | Item ✓, User ✗ |
-| Item-based CF | Medium | 10 ms | Item ✗ |
-| Content-based | Medium | 5 ms | Item ✓, User ✓ |
-| Trending/popular | Low | 1 ms | Both ✓ |
-| Social graph | Medium | 15 ms | User ✓ |
+| Two-tower ANN | High | 5 ms | Item yes, User no |
+| Item-based CF | Medium | 10 ms | Item no |
+| Content-based | Medium | 5 ms | Item yes, User yes |
+| Trending/popular | Low | 1 ms | Both yes |
+| Social graph | Medium | 15 ms | User yes |
 
 **Production:** Combine all sources → union → deduplicate → 1000 candidates.
 
@@ -1018,7 +1019,7 @@ quadrantChart
 |----------|---------|-----------|---------|
 | Pre-compute full feed | 5 ms | Stale (hours) | 500M × 20 items × 8B = 80 TB |
 | Online ranking | 60 ms | Fresh | Minimal |
-| Hybrid: pre-compute candidates, online rank | 30 ms | Good ✓ | 500M × 1000 × 8B = 4 TB |
+| Hybrid: pre-compute candidates, online rank | 30 ms | Good yes | 500M × 1000 × 8B = 4 TB |
 
 ### 9.4 Feature Store Build vs Buy
 
@@ -1026,13 +1027,13 @@ quadrantChart
 |--------|------|------|
 | Feast (open source) | Free, community | Ops burden |
 | Tecton (managed) | Production-ready | Cost |
-| Custom (Redis + Spark) | Full control | Engineering time ✓ (most common) |
+| Custom (Redis + Spark) | Full control | Engineering time yes (most common) |
 
 ### 9.5 Filtering vs Ranking for Diversity
 
 | Approach | Mechanism | Quality Impact |
 |----------|-----------|----------------|
-| Post-rank rules | Hard constraints on final list | Safe, predictable ✓ |
+| Post-rank rules | Hard constraints on final list | Safe, predictable yes |
 | Diversity in loss | Penalize similar items during training | Better but harder |
 | MMR (Maximal Marginal Relevance) | Greedy: pick highest score minus similarity to already-picked | Good balance |
 

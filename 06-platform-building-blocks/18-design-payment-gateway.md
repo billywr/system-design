@@ -681,7 +681,7 @@ flowchart LR
     A[Payment Record] --> Match{Three-Way Match}
     B[Processor Confirmation] --> Match
     C[Bank Settlement] --> Match
-    Match -->|all agree| OK[Reconciled ✓]
+    Match -->|all agree| OK[Reconciled yes]
     Match -->|disagree| Investigate[Exception Queue]
 ```
 

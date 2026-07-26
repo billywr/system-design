@@ -696,12 +696,12 @@ flowchart TD
 
 | Tag | Safe? | Alternative |
 |-----|-------|-------------|
-| `host`, `service`, `env` | ✅ | — |
-| `status_code` | ✅ | — |
-| `user_id` | ❌ | Sample 1%; use logs |
-| `request_id` | ❌ | Traces |
-| `url_path` | ⚠️ | Normalize to route template `/users/:id` |
-| `pod_name` | ⚠️ | Use `deployment` instead |
+| `host`, `service`, `env` | Yes | — |
+| `status_code` | Yes | — |
+| `user_id` | No | Sample 1%; use logs |
+| `request_id` | No | Traces |
+| `url_path` | Warning: | Normalize to route template `/users/:id` |
+| `pod_name` | Warning: | Use `deployment` instead |
 
 ### Cardinality Limit Enforcement
 

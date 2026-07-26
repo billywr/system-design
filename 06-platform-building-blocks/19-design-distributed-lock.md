@@ -438,7 +438,7 @@ sequenceDiagram
 | Aspect | Single Redis SET NX | Redlock (N nodes) |
 |--------|---------------------|-------------------|
 | Safety | Good with fencing | Debated without fencing |
-| Complexity | Low ★ | High |
+| Complexity | Low 1/5 | High |
 | Latency | ~1 ms | N × 1 ms |
 | Failover | Redis Sentinel risk | Quorum mitigates |
 | Interview | Recommend SET NX + fencing | Mention Redlock, cite critique |
@@ -724,7 +724,7 @@ flowchart TD
     Fine[Fine Lock: lock:inventory:sku-123] --> High2[Higher Overhead]
     Fine --> Parallel[Parallel Access to Different SKUs]
 
-    Fine --> Recommend[Recommended for inventory ★]
+    Fine --> Recommend[Recommended for inventory 1/5]
 ```
 
 **Rule:** Lock at the **smallest scope** that maintains correctness.
@@ -767,7 +767,7 @@ Before reaching for locks, consider:
 ```mermaid
 flowchart TD
     Need[Need Coordination?] --> CanCAS{Optimistic CAS works?}
-    CanCAS -->|yes| CAS[Use Version Column ★]
+    CanCAS -->|yes| CAS[Use Version Column 1/5]
     CanCAS -->|no| NeedLock[Use Distributed Lock]
     NeedLock --> Duration{Hold > 5 sec?}
     Duration -->|yes| ZK[ZooKeeper / etcd]

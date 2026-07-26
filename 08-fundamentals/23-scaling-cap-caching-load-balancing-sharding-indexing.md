@@ -652,15 +652,15 @@ flowchart TD
 
 | Data Type | Cache? | Pattern | TTL |
 |-----------|--------|---------|-----|
-| User session | ✅ Yes | Write-through | Session duration |
-| User profile | ✅ Yes | Cache-aside + invalidate on write | 1 hour |
-| Product catalog | ✅ Yes | Cache-aside | 15 min |
-| Like/view count | ✅ Yes | Write-behind | 60 sec |
-| Bank balance | ❌ No | Strong consistency from DB | — |
-| Search results | ✅ Yes | Cache-aside | 5 min |
-| Real-time stock price | ❌ No | Too stale-sensitive | — |
-| Config/feature flags | ✅ Yes | Local in-process | 30 sec |
-| Generated HTML page | ✅ Yes | CDN | 5 min |
+| User session | Yes | Write-through | Session duration |
+| User profile | Yes | Cache-aside + invalidate on write | 1 hour |
+| Product catalog | Yes | Cache-aside | 15 min |
+| Like/view count | Yes | Write-behind | 60 sec |
+| Bank balance | No | Strong consistency from DB | — |
+| Search results | Yes | Cache-aside | 5 min |
+| Real-time stock price | No | Too stale-sensitive | — |
+| Config/feature flags | Yes | Local in-process | 30 sec |
+| Generated HTML page | Yes | CDN | 5 min |
 
 ---
 
@@ -989,7 +989,7 @@ flowchart TD
     Q2 -->|no| HOT[Hot spot risk<br/>e.g., sharding by country]
     Q2 -->|yes| Q3{Is distribution even?}
     Q3 -->|no| SKEW[Data skew<br/>e.g., sharding by created_month]
-    Q3 -->|yes| GOOD[Good shard key ✅]
+    Q3 -->|yes| GOOD[Good shard key Yes]
 
     BAD --> FIX1[Redesign access patterns]
     HOT --> FIX2[Add hash suffix: country_id + hash]
@@ -1072,7 +1072,7 @@ flowchart TD
     I -->|yes| IDX[Better indexing<br/>Reduce query cost]
     I -->|no| SH[Shard the database<br/>Last resort]
     RR --> ENOUGH{Enough capacity?}
-    ENOUGH -->|yes| DONE[Done ✅]
+    ENOUGH -->|yes| DONE[Done Yes]
     ENOUGH -->|no| SH
 ```
 
@@ -1155,12 +1155,12 @@ CREATE INDEX idx_users_country_city_age ON users (country, city, age);
 graph TB
     IDX[Composite Index: country, city, age]
 
-    IDX --> Q1["✅ WHERE country = 'US'<br/>Uses index"]
-    IDX --> Q2["✅ WHERE country = 'US' AND city = 'NYC'<br/>Uses index"]
-    IDX --> Q3["✅ WHERE country = 'US' AND city = 'NYC' AND age > 25<br/>Uses index"]
-    IDX --> Q4["❌ WHERE city = 'NYC'<br/>Full scan — skipped country"]
-    IDX --> Q5["❌ WHERE age > 25<br/>Full scan — skipped country, city"]
-    IDX --> Q6["⚠️ WHERE country = 'US' AND age > 25<br/>Partial — uses country only"]
+    IDX --> Q1["Yes WHERE country = 'US'<br/>Uses index"]
+    IDX --> Q2["Yes WHERE country = 'US' AND city = 'NYC'<br/>Uses index"]
+    IDX --> Q3["Yes WHERE country = 'US' AND city = 'NYC' AND age > 25<br/>Uses index"]
+    IDX --> Q4["No WHERE city = 'NYC'<br/>Full scan — skipped country"]
+    IDX --> Q5["No WHERE age > 25<br/>Full scan — skipped country, city"]
+    IDX --> Q6["Warning: WHERE country = 'US' AND age > 25<br/>Partial — uses country only"]
 ```
 
 **Leftmost prefix rule:** Index `(A, B, C)` supports queries on `(A)`, `(A, B)`, `(A, B, C)` — but NOT `(B)`, `(C)`, or `(B, C)` alone.
@@ -1178,18 +1178,18 @@ graph TB
 
 ```mermaid
 graph LR
-    HIGH[High Selectivity<br/>email, UUID, order_id<br/>✅ Index very effective]
-    LOW[Low Selectivity<br/>gender, status, is_active<br/>❌ Index often ignored by optimizer]
+    HIGH[High Selectivity<br/>email, UUID, order_id<br/>Yes Index very effective]
+    LOW[Low Selectivity<br/>gender, status, is_active<br/>No Index often ignored by optimizer]
 ```
 
 | Column | Cardinality | Index Useful? |
 |--------|-------------|--------------|
-| `user_id` (UUID) | 100M unique | ✅ Excellent |
-| `email` | 100M unique | ✅ Excellent |
-| `order_id` | 500M unique | ✅ Excellent |
-| `country` | ~200 values | ⚠️ OK as first column in composite |
-| `status` (active/inactive) | 2 values | ❌ Optimizer prefers full scan |
-| `is_deleted` (true/false) | 2 values | ❌ Partial index instead |
+| `user_id` (UUID) | 100M unique | Yes Excellent |
+| `email` | 100M unique | Yes Excellent |
+| `order_id` | 500M unique | Yes Excellent |
+| `country` | ~200 values | Warning: OK as first column in composite |
+| `status` (active/inactive) | 2 values | No Optimizer prefers full scan |
+| `is_deleted` (true/false) | 2 values | No Partial index instead |
 
 **Partial index for low-selectivity columns:**
 
@@ -1296,7 +1296,7 @@ flowchart TD
     Q2 --> GEO[Location query]
 
     SINGLE --> SEL{High selectivity?}
-    SEL -->|yes| BTREE[B-Tree index ✅]
+    SEL -->|yes| BTREE[B-Tree index Yes]
     SEL -->|no| PARTIAL[Partial index<br/>or skip]
 
     MULTI --> COMP[Composite index<br/>equality cols first]
@@ -1665,6 +1665,7 @@ flowchart TD
 ## Quick Reference Card
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((System Design<br/>Fundamentals))
     Scaling

@@ -1,4 +1,4 @@
-# 35 System Design Interview Guides
+# 37 System Design Interview Guides
 
 > Comprehensive interview prep guides for Big Tech (Google, Microsoft, Meta, Amazon) system design interviews.  
 > Format inspired by [Hello Interview's Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery).
@@ -72,6 +72,7 @@ Each document follows the **Hello Interview Delivery Framework** — the same li
 |---|--------|------|-------|----------|------------|
 | 10 | **Design Dropbox** | [10-design-dropbox.md](04-storage-media/10-design-dropbox.md) | 1,151 | 18 | Block chunking, deduplication, conflict resolution, sync journal |
 | 11 | **Design YouTube** | [11-design-youtube.md](04-storage-media/11-design-youtube.md) | 1,145 | 18 | Upload pipeline, transcoding DAG, CDN, view counts, comments |
+| — | **Design Netflix** | [12-design-netflix.md](04-storage-media/12-design-netflix.md) | 1,092 | 11 | Open Connect CDN, per-title encoding, ABR, regional catalogs, homepage rows |
 
 ---
 
@@ -97,6 +98,7 @@ Each document follows the **Hello Interview Delivery Framework** — the same li
 | 18 | **Design Payment Gateway** | [18-design-payment-gateway.md](06-platform-building-blocks/18-design-payment-gateway.md) | 899 | 21 | Idempotency, double-spend prevention, PCI compliance, reconciliation |
 | 19 | **Design Distributed Lock Service** | [19-design-distributed-lock.md](06-platform-building-blocks/19-design-distributed-lock.md) | 847 | 18 | Redlock vs ZooKeeper, fencing tokens, lease expiration |
 | 20 | **Design Metrics & Monitoring (Datadog)** | [20-design-metrics-monitoring.md](06-platform-building-blocks/20-design-metrics-monitoring.md) | 901 | 20 | Time-series DB, aggregation, alerting, cardinality management |
+| — | **Design LRU Cache** | [21-design-lru-cache.md](06-platform-building-blocks/21-design-lru-cache.md) | 786 | 8 | HashMap + DLL O(1), thread safety, distributed sharding, LRU vs LFU, L1+L2 |
 
 ---
 
@@ -169,9 +171,9 @@ All diagrams use **Mermaid** syntax — render in GitHub, Obsidian, VS Code, or 
 
 | Metric | Value |
 |--------|-------|
-| Total guides | **35** (22 case studies + 7 fundamentals + 6 infrastructure) |
-| Total lines | **~46,540** |
-| Total Mermaid diagrams | **~952** |
+| Total guides | **37** (24 case studies + 7 fundamentals + 6 infrastructure) |
+| Total lines | **~48,310** |
+| Total Mermaid diagrams | **~973** |
 | Avg lines per guide | **~1,330** |
 | Avg diagrams per guide | **~27** |
 
@@ -198,6 +200,30 @@ flowchart LR
 
 ---
 
+## Companion Guides (Code, SQL, Capacity)
+
+These sit alongside the 37 system design guides:
+
+| Guide | File | Covers |
+|-------|------|--------|
+| **Design Patterns Master** | [DESIGN-PATTERNS-MASTER-GUIDE.md](DESIGN-PATTERNS-MASTER-GUIDE.md) | All 23 GoF patterns + Repository/DI — memorable analogies, **Java** examples, why/how/where for each |
+| **SQL Interview Mastery** | [SQL-INTERVIEW-MASTER-GUIDE.md](SQL-INTERVIEW-MASTER-GUIDE.md) | Joins, CTEs (incl. recursive), window functions, HackerRank patterns, big-tech metrics (DAU, funnels, retention) |
+| **Capacity Estimation Master** | [CAPACITY-ESTIMATION-MASTER-GUIDE.md](CAPACITY-ESTIMATION-MASTER-GUIDE.md) | MAU, DAU, QPS, TPS, latency, bandwidth, storage — formulas, units, worked examples, per-system metric map |
+
+---
+
+## Cybersecurity & Networking (`cybersec/`)
+
+World-class security and networking curriculum — see [cybersec/README.md](cybersec/README.md):
+
+| Guide | File | Covers |
+|-------|------|--------|
+| **Cybersecurity Master** | [cybersec/CYBERSEC-MASTER-GUIDE.md](cybersec/CYBERSEC-MASTER-GUIDE.md) | Linux, Wireshark, pentest, blue team, AD, threat hunting, DevSecOps, zero trust |
+| **Unleash Hacking (Ethical)** | [cybersec/UNLEASH-HACKING.md](cybersec/UNLEASH-HACKING.md) | Python offensive scripts, modern tools (nmap/Burp/Metasploit/BloodHound), OS commands, HTB to OSCP hero path — **authorized labs only** |
+| **Networking Master** | [cybersec/NETWORKING-MASTER-GUIDE.md](cybersec/NETWORKING-MASTER-GUIDE.md) | Subnetting, AWS/Azure/GCP VPC, firewalls, BGP, elite troubleshooting |
+
+---
+
 ## Cross-Cutting Patterns (Learn Once, Apply Everywhere)
 
 These patterns appear across multiple guides — master them early:
@@ -205,12 +231,12 @@ These patterns appear across multiple guides — master them early:
 | Pattern | Appears In |
 |---------|-----------|
 | **Fan-out on write vs read** | Instagram, Twitter, Notification System |
-| **Consistent hashing + sharding** | Cache, URL Shortener, Discord, Uber |
-| **CDN + object storage** | Instagram, YouTube, Dropbox, TikTok |
+| **Consistent hashing + sharding** | Cache, URL Shortener, LRU Cache, Discord, Uber |
+| **CDN + object storage** | Instagram, YouTube, Netflix, Dropbox, TikTok |
 | **Message queue + async workers** | YouTube transcoding, Notifications, Search indexing |
 | **Idempotency keys** | Payment Gateway, Notifications, Ticketmaster |
 | **Geospatial indexing** | Uber, Airbnb |
-| **Recommendation pipeline** | TikTok, YouTube, AI Rec System, LinkedIn |
+| **Recommendation pipeline** | TikTok, YouTube, Netflix, AI Rec System, LinkedIn |
 | **Rate limiting** | Ticketmaster, API Gateway (all systems) |
 | **CAP theorem trade-offs** | Cache, Lock Service, WhatsApp, Discord |
 | **State machines + actor model** | Elevator System, Parking Lot, Zoom (breakout rooms), Payment Gateway |
@@ -222,7 +248,7 @@ These patterns appear across multiple guides — master them early:
 | **WebSocket / gRPC real-time** | WhatsApp, Discord, Uber internal services |
 | **DNS + CDN edge routing** | URL Shortener custom domains, multi-region failover, Instagram media |
 | **K8s + HPA autoscaling** | Microservices deployment, zero-downtime rolling updates |
-| **S3 + CloudFront media pipeline** | Instagram, YouTube, Dropbox blob storage |
+| **S3 + CloudFront media pipeline** | Instagram, YouTube, Netflix (Open Connect), Dropbox blob storage |
 | **SLI/SLO/error budgets** | Observability guide, Datadog metrics, release decisions |
 | **Canary + blue-green deploys** | CI/CD guide, high-availability system launches |
 

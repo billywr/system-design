@@ -432,7 +432,7 @@ Response `200 OK`:
   "user_id": "abc123",
   "username": "jane_doe",
   "display_name": "Jane Doe",
-  "bio": "Photographer 📸",
+  "bio": "Photographer ",
   "avatar_url": "https://cdn.instagram.com/avatars/abc123.jpg",
   "follower_count": 1520,
   "following_count": 340,
@@ -537,7 +537,7 @@ GET    /v1/feed/home?cursor=&limit=20
 Request:
 ```json
 {
-  "caption": "Sunset in Santorini 🌅 #travel #sunset",
+  "caption": "Sunset in Santorini  #travel #sunset",
   "media_ids": ["media_001", "media_002"],
   "location": "Santorini, Greece",
   "tagged_users": ["user_456"]
@@ -549,7 +549,7 @@ Response `201 Created`:
 {
   "post_id": "post_789",
   "user_id": "abc123",
-  "caption": "Sunset in Santorini 🌅 #travel #sunset",
+  "caption": "Sunset in Santorini  #travel #sunset",
   "media": [
     {
       "media_id": "media_001",
@@ -579,7 +579,7 @@ Response `200 OK`:
         "username": "jane_doe",
         "avatar_url": "https://cdn.instagram.com/avatars/abc123.jpg"
       },
-      "caption": "Sunset in Santorini 🌅",
+      "caption": "Sunset in Santorini ",
       "media": [{ "media_id": "media_001", "type": "photo", "url": "..." }],
       "like_count": 42,
       "comment_count": 5,
@@ -1406,15 +1406,15 @@ graph TD
     A[Design Decision] --> B{Feed Model}
     B --> C[Push: fast read]
     B --> D[Pull: fast write]
-    B --> E[Hybrid ✓]
+    B --> E[Hybrid yes]
 
     A --> F{Post Storage}
     F --> G[PostgreSQL]
-    F --> H[Cassandra ✓]
+    F --> H[Cassandra yes]
 
     A --> I{Media Delivery}
     I --> J[Direct from S3]
-    I --> K[CDN ✓]
+    I --> K[CDN yes]
 ```
 
 ---

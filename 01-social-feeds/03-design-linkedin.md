@@ -145,6 +145,7 @@ flowchart TD
 ### 2.3 Requirements Mind Map
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((LinkedIn))
     Identity
@@ -834,8 +835,8 @@ graph TD
     C ---|3rd| E[Eve]
 
     style ME fill:#0077B5,color:#fff
-    style A fill:#90EE90
-    style B fill:#90EE90
+    style A fill:#D2691E,color:#ffffff
+    style B fill:#D2691E,color:#ffffff
     style C fill:#FFD700
     style D fill:#FFD700
     style E fill:#FFA500
@@ -1564,16 +1565,16 @@ UNIQUE (job_id, applicant_id)  -- one application per job per person
 | **Graph density** | Lower (both must accept) | Higher (one-click follow) |
 | **Feed quality** | Higher trust, less noise | More content, more noise |
 | **PYMK value** | Very high | Lower |
-| **LinkedIn choice** | ✅ Bidirectional | |
+| **LinkedIn choice** | Yes Bidirectional | |
 
 ### 9.2 Graph Storage Approaches
 
 | Approach | Pros | Cons | LinkedIn Choice |
 |----------|------|------|-----------------|
-| **Adjacency lists (KV)** | Fast 1st degree | Slow multi-hop | ✅ Primary |
-| **Neo4j** | Rich graph queries | Doesn't scale to 450B edges | ❌ |
-| **GraphFrame (Spark)** | Batch analytics | Not real-time | ✅ Offline PYMK |
-| **Precomputed 2nd degree** | Fast reads | Stale, storage heavy | ✅ Cached |
+| **Adjacency lists (KV)** | Fast 1st degree | Slow multi-hop | Yes Primary |
+| **Neo4j** | Rich graph queries | Doesn't scale to 450B edges | No |
+| **GraphFrame (Spark)** | Batch analytics | Not real-time | Yes Offline PYMK |
+| **Precomputed 2nd degree** | Fast reads | Stale, storage heavy | Yes Cached |
 
 ### 9.3 Feed: Push vs Pull vs Hybrid
 
@@ -1582,14 +1583,14 @@ UNIQUE (job_id, applicant_id)  -- one application per job per person
 | Read latency | Fast | Slow | Fast |
 | Write cost | High for influencers | Low | Moderate |
 | Freshness | Seconds | On-demand | Seconds |
-| **LinkedIn** | | | ✅ Hybrid (10K threshold) |
+| **LinkedIn** | | | Yes Hybrid (10K threshold) |
 
 ### 9.4 Search: Elasticsearch vs Custom
 
 | | Elasticsearch | Custom (LinkedIn Galene) |
 |--|--------------|--------------------------|
-| People search | Good enough | ✅ Tuned for professional |
-| Job search | Good | ✅ Skills matching |
+| People search | Good enough | Yes Tuned for professional |
+| Job search | Good | Yes Skills matching |
 | Setup complexity | Low | Very high |
 | **Interview answer** | ES for MVP, custom at scale | |
 
@@ -1600,7 +1601,7 @@ UNIQUE (job_id, applicant_id)  -- one application per job per person
 | Control | Full | Limited |
 | Cost at scale | Lower | Higher per message |
 | Time to market | Slower | Faster |
-| **LinkedIn** | ✅ Custom (core feature) | |
+| **LinkedIn** | Yes Custom (core feature) | |
 
 ### 9.6 SQL vs NoSQL for Jobs
 
@@ -1771,11 +1772,11 @@ flowchart LR
 
 ### 11.5 What NOT to Say
 
-- ❌ "Use Neo4j for the connection graph" — 450B edges won't fit
-- ❌ "Follow model like Twitter" — LinkedIn is bidirectional connect
-- ❌ "Store messages in PostgreSQL" — 200M/day needs dedicated message store
-- ❌ "Real-time 2nd degree for all 900M members" — precompute + on-demand with timeout
-- ❌ "Skip job matching" — it's a core differentiator
+- **Avoid:** "Use Neo4j for the connection graph" — 450B edges won't fit
+- **Avoid:** "Follow model like Twitter" — LinkedIn is bidirectional connect
+- **Avoid:** "Store messages in PostgreSQL" — 200M/day needs dedicated message store
+- **Avoid:** "Real-time 2nd degree for all 900M members" — precompute + on-demand with timeout
+- **Avoid:** "Skip job matching" — it's a core differentiator
 
 ### 11.6 LinkedIn vs Instagram vs TikTok
 

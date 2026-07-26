@@ -147,6 +147,7 @@ flowchart LR
 ### 2.3 Requirements Summary Diagram
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((Google Search))
     Offline
@@ -898,7 +899,7 @@ flowchart TB
 |-------|-----------|------------|------|
 | Batch only | Days/weeks | Low | Low |
 | Incremental | Hours | Medium | Medium |
-| Streaming (Kafka) | Minutes | High | High ✓ for news |
+| Streaming (Kafka) | Minutes | High | High yes for news |
 
 ### 9.3 Crawl Politeness vs Freshness
 

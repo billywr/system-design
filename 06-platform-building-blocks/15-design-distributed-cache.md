@@ -133,7 +133,7 @@ Read bandwidth:     100K × 2 KB ≈ 200 MB/s
 ```
 Per node (AWS r6g.2xlarge): 64 GB RAM, ~200K ops/sec
 Memory nodes needed: 520 GB / 64 GB ≈ 9 nodes (with headroom → 12)
-Ops capacity: 12 × 200K = 2.4M ops/sec >> 105K required ✓
+Ops capacity: 12 × 200K = 2.4M ops/sec >> 105K required yes
 ```
 
 ```mermaid
@@ -614,7 +614,7 @@ flowchart LR
 
 | Pattern | Read Latency | Write Latency | Consistency | Complexity |
 |---------|-------------|---------------|-------------|------------|
-| Cache-Aside | Miss: high | Low | Eventual | Low ★ |
+| Cache-Aside | Miss: high | Low | Eventual | Low 1/5 |
 | Write-Through | Low | High | Strong | Medium |
 | Write-Behind | Low | Lowest | Weakest | High |
 | Read-Through | Low | N/A | Eventual | Medium |

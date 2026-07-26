@@ -139,6 +139,7 @@ flowchart TD
 ### 2.3 Requirements Mind Map
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#D2691E', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#5D2E0C', 'secondaryColor': '#D2691E', 'tertiaryColor': '#D2691E', 'lineColor': '#5D2E0C'}}}%%
 mindmap
   root((TikTok))
     Core
@@ -1187,20 +1188,20 @@ flowchart TD
 
 | Approach | Pros | Cons | TikTok Choice |
 |----------|------|------|---------------|
-| **Social graph only** | Simple | No discovery | ❌ Too limited |
-| **Collaborative filtering** | Serendipity | Cold start | ✅ One candidate source |
-| **Content-based (embeddings)** | Cold start OK | Filter bubble | ✅ Primary source |
-| **Multi-armed bandit** | Exploration/exploit | Complex | ✅ For new videos |
-| **Full two-stage** | Best quality | Infrastructure heavy | ✅ Core architecture |
+| **Social graph only** | Simple | No discovery | No Too limited |
+| **Collaborative filtering** | Serendipity | Cold start | Yes One candidate source |
+| **Content-based (embeddings)** | Cold start OK | Filter bubble | Yes Primary source |
+| **Multi-armed bandit** | Exploration/exploit | Complex | Yes For new videos |
+| **Full two-stage** | Best quality | Infrastructure heavy | Yes Core architecture |
 
 ### 9.2 Video Storage Formats
 
 | Format | Pros | Cons | Choice |
 |--------|------|------|--------|
-| **MP4 progressive** | Simple | No ABR | ❌ |
-| **HLS (MPEG-TS)** | Wide support, ABR | Larger segments | ✅ Primary |
-| **DASH (fMP4)** | Modern, efficient | Less mobile support | ✅ Secondary |
-| **WebM/VP9** | Open codec | Limited iOS | ❌ |
+| **MP4 progressive** | Simple | No ABR | No |
+| **HLS (MPEG-TS)** | Wide support, ABR | Larger segments | Yes Primary |
+| **DASH (fMP4)** | Modern, efficient | Less mobile support | Yes Secondary |
+| **WebM/VP9** | Open codec | Limited iOS | No |
 
 ### 9.3 Transcoding: CPU vs GPU
 
@@ -1209,7 +1210,7 @@ flowchart TD
 | Speed | 1x real-time | 10-20x real-time |
 | Cost | Lower per hour | Higher per hour but 10x throughput |
 | Quality | Slightly better | Good enough |
-| **Choice** | | ✅ GPU at scale |
+| **Choice** | | Yes GPU at scale |
 
 ### 9.4 Seen Video Deduplication
 
@@ -1254,7 +1255,7 @@ graph TD
     L2[Level 2: Trending only] -->|All ML down| L3
     L3[Level 3: Static popular list per region]
 
-    style L0 fill:#90EE90
+    style L0 fill:#D2691E,color:#ffffff
     style L1 fill:#FFD700
     style L2 fill:#FFA500
     style L3 fill:#FF6347
@@ -1372,11 +1373,11 @@ flowchart LR
 
 ### 11.5 What NOT to Say
 
-- ❌ "Just use collaborative filtering" — ignores content-based cold start
-- ❌ "Store all watch events in Cassandra" — 315B events/day needs streaming
-- ❌ "Transcode on API servers" — CPU bottleneck, use GPU farm
-- ❌ "Show all videos to all users" — candidate generation is essential
-- ❌ "Like count is the top signal" — watch time/completion dominates
+- **Avoid:** "Just use collaborative filtering" — ignores content-based cold start
+- **Avoid:** "Store all watch events in Cassandra" — 315B events/day needs streaming
+- **Avoid:** "Transcode on API servers" — CPU bottleneck, use GPU farm
+- **Avoid:** "Show all videos to all users" — candidate generation is essential
+- **Avoid:** "Like count is the top signal" — watch time/completion dominates
 
 ---
 
