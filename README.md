@@ -37,9 +37,9 @@ Each document follows the **Hello Interview Delivery Framework** — the same li
 
 | # | System | File | Lines | Diagrams | Key Topics |
 |---|--------|------|-------|----------|------------|
-| 1 | **Design Instagram** | [01-design-instagram.md](01-social-feeds/01-design-instagram.md) | 1,578 | 18 | Hybrid push/pull fan-out, CDN, stories TTL, sharded counters |
-| 2 | **Design TikTok** | [02-design-tiktok.md](01-social-feeds/02-design-tiktok.md) | 1,427 | 22 | FYP recommendation pipeline, video transcoding, engagement signals |
-| 3 | **Design LinkedIn** | [03-design-linkedin.md](01-social-feeds/03-design-linkedin.md) | 1,759 | 18 | Graph DB (1st/2nd/3rd degree), PYMK, job search, professional feed |
+| 1 | **Design Instagram** | [01-design-instagram.md](01-social-feeds/01-design-instagram.md) | 1,664 | 18 | Hello Interview framework, hybrid push/pull fan-out, CDN, stories |
+| 2 | **Design TikTok** | [02-design-tiktok.md](01-social-feeds/02-design-tiktok.md) | 1,514 | 22 | Hello Interview framework, FYP pipeline, transcoding, engagement |
+| 3 | **Design LinkedIn** | [03-design-linkedin.md](01-social-feeds/03-design-linkedin.md) | 1,937 | 18 | Hello Interview framework, graph DB, PYMK, job search, feed |
 
 ---
 
@@ -93,8 +93,8 @@ Each document follows the **Hello Interview Delivery Framework** — the same li
 |---|--------|------|-------|----------|------------|
 | 14 | **Design URL Shortener (Bitly)** | [14-design-url-shortener.md](06-platform-building-blocks/14-design-url-shortener.md) | 812 | 18 | Base62 encoding, redirect latency, analytics, custom domains |
 | 15 | **Design Distributed Cache (Redis)** | [15-design-distributed-cache.md](06-platform-building-blocks/15-design-distributed-cache.md) | 801 | 23 | Consistent hashing, eviction policies, cache-aside vs write-through |
-| 16 | **Design Notification System** | [16-design-notification-system.md](06-platform-building-blocks/16-design-notification-system.md) | 901 | 22 | Multi-channel fan-out, templates, at-least-once delivery, DLQ |
-| 17 | **Design Distributed Rate Limiter** | [17-design-rate-limiter.md](06-platform-building-blocks/17-design-rate-limiter.md) | 815 | 19 | Token bucket, sliding window, Redis Lua, per-user vs global |
+| 16 | **Design Notification System** | [16-design-notification-system.md](06-platform-building-blocks/16-design-notification-system.md) | 941 | 24 | Hello Interview framework, multi-channel fan-out, async 202, idempotency |
+| 17 | **Design Distributed Rate Limiter** | [17-design-rate-limiter.md](06-platform-building-blocks/17-design-rate-limiter.md) | 1,028 | 19 | Hello Interview framework, sliding window, Redis Lua, Python implementations |
 | 18 | **Design Payment Gateway** | [18-design-payment-gateway.md](06-platform-building-blocks/18-design-payment-gateway.md) | 899 | 21 | Idempotency, double-spend prevention, PCI compliance, reconciliation |
 | 19 | **Design Distributed Lock Service** | [19-design-distributed-lock.md](06-platform-building-blocks/19-design-distributed-lock.md) | 847 | 18 | Redlock vs ZooKeeper, fencing tokens, lease expiration |
 | 20 | **Design Metrics & Monitoring (Datadog)** | [20-design-metrics-monitoring.md](06-platform-building-blocks/20-design-metrics-monitoring.md) | 901 | 20 | Time-series DB, aggregation, alerting, cardinality management |
@@ -147,21 +147,26 @@ Each document follows the **Hello Interview Delivery Framework** — the same li
 
 ## Document Structure (Every Guide)
 
-Each `.md` file contains:
+Each case study guide (Tracks 1–7) follows the **Hello Interview Delivery Framework**:
 
 ```
-1.  Problem Statement & Scope
-2.  Requirements Clarification (Functional + Non-Functional)
-3.  Capacity Estimation (back-of-envelope math)
-4.  Core Entities (with ER diagrams)
-5.  API Design (REST endpoints + sequence diagrams)
-6.  Data Model / Schema (SQL, NoSQL, Redis, etc.)
-7.  High-Level Architecture (system + component diagrams)
-8.  Deep Dives (3–5 platform-specific challenges)
-9.  Trade-offs & Alternatives
-10. Failure Modes & Reliability
-11. Interview Cheat Sheet (talking points, follow-ups, common mistakes)
+1.  How to Use This Guide (opening script, rubric, pacing)
+2.  Requirements (~5 min)
+3.  Core Entities (~2 min)
+4.  API / System Interface (~5 min)
+5.  Data Flow (~5 min)
+6.  High-Level Design (~10–15 min)
+7.  Deep Dives (~10 min)
+8.  Capacity & Sizing
+9.  Failure Modes & Resilience
+10. Trade-offs Summary
+11. Interview Walkthrough Script
+12. Follow-Up Questions
+13. Real-World References
+14. Interview Cheat Sheet
 ```
+
+Fundamentals (Track 8) and Infrastructure (Track 9) use a deep-dive reference format with interview cheat sheets — same spirit, adapted for concept guides rather than single-system designs.
 
 All diagrams use **Mermaid** syntax — render in GitHub, Obsidian, VS Code, or any Mermaid-compatible viewer.
 
@@ -207,8 +212,12 @@ These sit alongside the 37 system design guides:
 | Guide | File | Covers |
 |-------|------|--------|
 | **Design Patterns Master** | [DESIGN-PATTERNS-MASTER-GUIDE.md](DESIGN-PATTERNS-MASTER-GUIDE.md) | All 23 GoF patterns + Repository/DI — memorable analogies, **Java** examples, why/how/where for each |
+| **12 System Design Patterns** | [SYSTEM-DESIGN-PATTERNS-MASTER-GUIDE.md](SYSTEM-DESIGN-PATTERNS-MASTER-GUIDE.md) | Circuit breaker, rate limiter, bulkhead, retry, timeout, cache aside, write-through, pub/sub, event sourcing, CQRS, strangler fig, saga |
 | **SQL Interview Mastery** | [SQL-INTERVIEW-MASTER-GUIDE.md](SQL-INTERVIEW-MASTER-GUIDE.md) | Joins, CTEs (incl. recursive), window functions, HackerRank patterns, big-tech metrics (DAU, funnels, retention) |
 | **Capacity Estimation Master** | [CAPACITY-ESTIMATION-MASTER-GUIDE.md](CAPACITY-ESTIMATION-MASTER-GUIDE.md) | MAU, DAU, QPS, TPS, latency, bandwidth, storage — formulas, units, worked examples, per-system metric map |
+| **Spring Boot Master** | [SPRING-BOOT-MASTER-GUIDE.md](SPRING-BOOT-MASTER-GUIDE.md) | Principal-level Spring Boot — startup internals, annotations, auto-config, security, memory, concurrency, performance, 45+ interview Q&A |
+| **JVM Master** | [JVM-MASTER-GUIDE.md](JVM-MASTER-GUIDE.md) | Class loading, heap/metaspace, JIT, G1/ZGC/Shenandoah GC deep dive, GC log analysis, jcmd/jfr, 96+ interview Q&A |
+| **Kenya Integrator Skills** | [KENYA-INTEGRATOR-SKILLS-MASTER-GUIDE.md](KENYA-INTEGRATOR-SKILLS-MASTER-GUIDE.md) | M-Pesa Daraja, banking APIs, KRA eTIMS, ERP/CRM, payment gateways, SMS, accounting, PostgreSQL, Java, networking, business requirements, AI |
 
 ---
 
@@ -237,7 +246,10 @@ These patterns appear across multiple guides — master them early:
 | **Idempotency keys** | Payment Gateway, Notifications, Ticketmaster |
 | **Geospatial indexing** | Uber, Airbnb |
 | **Recommendation pipeline** | TikTok, YouTube, Netflix, AI Rec System, LinkedIn |
-| **Rate limiting** | Ticketmaster, API Gateway (all systems) |
+| **Rate limiting** | Ticketmaster, API Gateway (all systems), [System Design Patterns](SYSTEM-DESIGN-PATTERNS-MASTER-GUIDE.md) |
+| **Circuit breaker + bulkhead + retry** | API Gateway, Payment Gateway, [System Design Patterns](SYSTEM-DESIGN-PATTERNS-MASTER-GUIDE.md) |
+| **Saga + compensating transactions** | Payment Gateway, Message Queues guide, Booking systems |
+| **CQRS + event sourcing** | Message Queues guide, AI Rec System, high read:write feeds |
 | **CAP theorem trade-offs** | Cache, Lock Service, WhatsApp, Discord |
 | **State machines + actor model** | Elevator System, Parking Lot, Zoom (breakout rooms), Payment Gateway |
 | **Real-time dispatch / scheduling** | Elevator System, Uber, Ticketmaster, Parking Lot (spot allocation) |

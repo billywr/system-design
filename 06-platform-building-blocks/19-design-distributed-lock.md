@@ -1,32 +1,63 @@
 # Design a Distributed Lock Service
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for building a production distributed locking service using Redis, ZooKeeper, or etcd — the coordination primitive behind inventory systems, job schedulers, and leader election.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Hard (fencing tokens + leases)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Redlock vs ZooKeeper, fencing tokens, lease expiration
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model](#5-data-model)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Redis-Based Locks](#7-deep-dive-redis-based-locks)
-8. [Deep Dive: ZooKeeper & etcd Locks](#8-deep-dive-zookeeper--etcd-locks)
-9. [Deep Dive: Fencing Tokens](#9-deep-dive-fencing-tokens)
-10. [Deep Dive: Lease Expiration & Safety](#10-deep-dive-lease-expiration--safety)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **distributed lock service** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope mutex vs read-write vs leader election |
+| Solution design | Client → lock service → storage backend |
+| Technical excellence | Fencing tokens, Redlock critique, TTL |
+| Communication | Why locks are dangerous and alternatives | |
+
+**Suggested opening script:**
+
+> "I'll design a distributed lock: acquire, renew, release with fencing tokens. My focus is lease expiration and split-brain prevention."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a distributed lock service that allows multiple processes across different machines to coordinate exclusive access to a shared resource. The lock must be mutually exclusive (only one holder at a time), fault-tolerant (survive process crashes via lease expiration), and safe (prevent split-brain and stale lock holders from corrupting data).
 
 **What the interviewer is really testing:**
@@ -39,7 +70,6 @@ Design a distributed lock service that allows multiple processes across differen
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -101,8 +131,7 @@ graph TB
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **job scheduler** with 500 microservices, 50K concurrent jobs, 10K lock operations/sec peak.
 
 ### Lock Operations
@@ -142,8 +171,7 @@ pie title Lock Operation Types
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### Acquire Lock
 
 ```http
@@ -213,8 +241,7 @@ with lock_service.acquire("inventory:sku-98765", ttl=30) as lock:
 
 ---
 
-## 5. Data Model
-
+## Core Entities (~2 min)
 ### Lock Record
 
 ```json
@@ -267,8 +294,19 @@ erDiagram
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Clients
@@ -334,7 +372,9 @@ stateDiagram-v2
 
 ---
 
-## 7. Deep Dive: Redis-Based Locks
+## Deep Dives (~10 min)
+
+### 7.1 Redis-Based Locks
 
 ### Naive Approach (WRONG)
 
@@ -445,7 +485,7 @@ sequenceDiagram
 
 ---
 
-## 8. Deep Dive: ZooKeeper & etcd Locks
+### 7.2 ZooKeeper & etcd Locks
 
 ### Why Coordination Services Are Safer
 
@@ -539,7 +579,7 @@ flowchart LR
 
 ---
 
-## 9. Deep Dive: Fencing Tokens
+### 7.3 Fencing Tokens
 
 ### The Stale Lock Problem
 
@@ -628,7 +668,7 @@ flowchart TD
 
 ---
 
-## 10. Deep Dive: Lease Expiration & Safety
+### 7.4 Lease Expiration & Safety
 
 ### Lease vs Lock
 
@@ -695,8 +735,7 @@ flowchart TD
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Redis Cluster for Locks
 
 ```
@@ -742,8 +781,7 @@ Avoid: Redlock across regions (clock skew + partition issues)
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Holder crashes | Lock held until TTL | Lease with 30s TTL |
@@ -776,8 +814,7 @@ flowchart TD
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Backend | Redis | ZooKeeper | **Redis** for speed; **ZK** for fairness/consistency |
@@ -788,8 +825,7 @@ flowchart TD
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "Distributed lock for inventory updates: mutual exclusion, auto-release on crash via 30s lease, fencing tokens to prevent stale writes, 10K ops/sec."
@@ -815,8 +851,7 @@ Draw workers → lock service → Redis/ZK. Show acquire/renew/release lifecycle
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **Design leader election using the same infrastructure.** — ZK ephemeral sequential; smallest node wins; watch predecessor.
 2. **Implement reentrant locks.** — Thread ID in lock value; increment hold count.
 3. **Read/write lock.** — ZK: separate lock paths for readers/writers; writers wait for all readers.
@@ -825,8 +860,7 @@ Draw workers → lock service → Redis/ZK. Show acquire/renew/release lifecycle
 
 ---
 
-## 16. Real-World References
-
+## Real-World References
 | System | Lock Mechanism |
 |--------|----------------|
 | **Redis (Redisson)** | SET NX EX + watchdog renewal |
@@ -844,4 +878,10 @@ Draw workers → lock service → Redis/ZK. Show acquire/renew/release lifecycle
 
 ---
 
-> **Interview Tip:** When discussing Redis locks, **proactively mention fencing tokens and Kleppmann's critique** — it demonstrates depth beyond tutorial-level SET NX and shows you understand production safety.
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** When discussing Redis locks, **proactively mention fencing tokens and Kleppmann's critique** — it demonstrates depth beyond tutorial-level SET NX and shows you understand production safety.
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

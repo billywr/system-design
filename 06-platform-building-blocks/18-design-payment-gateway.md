@@ -1,32 +1,63 @@
 # Design a Payment Gateway
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for building a production payment processing platform like Stripe, Adyen, PayPal, or Square's payment infrastructure.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Hard (money correctness + PCI)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Idempotency, double-spend prevention, PCI, reconciliation
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model](#5-data-model)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Idempotency](#7-deep-dive-idempotency)
-8. [Deep Dive: Double-Spend Prevention](#8-deep-dive-double-spend-prevention)
-9. [Deep Dive: PCI Compliance & Security](#9-deep-dive-pci-compliance--security)
-10. [Deep Dive: Reconciliation](#10-deep-dive-reconciliation)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **payment processing platform like Stripe** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope auth/capture vs marketplace splits |
+| Solution design | API → ledger → processor → webhook |
+| Technical excellence | Idempotency, double-spend, reconciliation |
+| Communication | Strong consistency for money movement | |
+
+**Suggested opening script:**
+
+> "I'll design a payment gateway: authorize, capture, refund, with idempotency and PCI scope minimization. My focus is ledger correctness and webhook handling."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a payment gateway that processes credit card and bank payments for merchants. The system must authorize, capture, and settle transactions; handle refunds and chargebacks; guarantee idempotent processing; prevent double-spending; maintain PCI compliance; and reconcile financial records with external payment processors and banks.
 
 **What the interviewer is really testing:**
@@ -39,7 +70,6 @@ Design a payment gateway that processes credit card and bank payments for mercha
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -105,8 +135,7 @@ graph TB
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **50M transactions/day**, average **$45/transaction**, peak **10K TPS** (Black Friday).
 
 ### Transaction Volume
@@ -146,8 +175,7 @@ pie title Transaction Types
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### Create Payment (Idempotent)
 
 ```http
@@ -225,8 +253,7 @@ Stripe-Signature: t=1720430400,v1=abc123...
 
 ---
 
-## 5. Data Model
-
+## Core Entities (~2 min)
 ### Payment State Machine
 
 ```mermaid
@@ -311,8 +338,19 @@ flowchart LR
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Merchant
@@ -396,7 +434,9 @@ sequenceDiagram
 
 ---
 
-## 7. Deep Dive: Idempotency
+## Deep Dives (~10 min)
+
+### 7.1 Idempotency
 
 ### Why Idempotency Is Non-Negotiable
 
@@ -471,7 +511,7 @@ Two layers: gateway idempotency + processor idempotency
 
 ---
 
-## 8. Deep Dive: Double-Spend Prevention
+### 7.2 Double-Spend Prevention
 
 ### Threat Model
 
@@ -553,7 +593,7 @@ Instead:
 
 ---
 
-## 9. Deep Dive: PCI Compliance & Security
+### 7.3 PCI Compliance & Security
 
 ### PCI DSS Scope Reduction
 
@@ -644,7 +684,7 @@ Verify webhook signature:
 
 ---
 
-## 10. Deep Dive: Reconciliation
+### 7.4 Reconciliation
 
 ### Why Reconciliation Matters
 
@@ -734,8 +774,7 @@ sequenceDiagram
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Database Strategy for Ledger
 
 ```
@@ -797,8 +836,7 @@ flowchart TD
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Auth timeout | Unknown if charged | Query processor; never blind retry |
@@ -828,8 +866,7 @@ sequenceDiagram
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Idempotency store | Redis only | Redis + DB | **Both** (speed + durability) |
@@ -840,8 +877,7 @@ sequenceDiagram
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "Payment gateway for merchants: authorize + capture, idempotent API, no double-charging, PCI compliant via tokenization, daily reconciliation with processor."
@@ -867,8 +903,7 @@ Draw merchant → API → idempotency → orchestrator → processor + ledger. E
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **Design Stripe Connect (marketplace payments).** — Separate charges and transfers; connected accounts; split ledger.
 2. **Handle subscription billing.** — Scheduler + dunning + payment method updater webhooks.
 3. **Design fraud detection.** — Real-time scoring (< 100ms); rules engine + ML; block before processor call.
@@ -877,8 +912,7 @@ Draw merchant → API → idempotency → orchestrator → processor + ledger. E
 
 ---
 
-## 16. Real-World References
-
+## Real-World References
 | Company | Notable Design |
 |---------|----------------|
 | **Stripe** | Idempotency keys, Connect, webhook signatures |
@@ -896,4 +930,10 @@ Draw merchant → API → idempotency → orchestrator → processor + ledger. E
 
 ---
 
-> **Interview Tip:** Say **"integer cents, never floats"** early — interviewers notice. Draw the idempotency flow before the payment flow; it frames everything else.
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** Say **"integer cents, never floats"** early — interviewers notice. Draw the idempotency flow before the payment flow; it frames everything else.
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

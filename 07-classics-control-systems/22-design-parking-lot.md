@@ -1,33 +1,63 @@
 # Design a Parking Lot System
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for designing a multi-level parking garage management system (SpotHero, ParkWhiz, or airport parking bar).
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Medium (allocation + concurrency)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Best-fit allocation, atomic reservation, fees, IoT sensors
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [Core Entities](#4-core-entities)
-5. [API Design](#5-api-design)
-6. [Data Model](#6-data-model)
-7. [High-Level Architecture](#7-high-level-architecture)
-8. [Deep Dive: Spot Allocation & Best-Fit Algorithm](#8-deep-dive-spot-allocation--best-fit-algorithm)
-9. [Deep Dive: Entry, Exit & Payment Flow](#9-deep-dive-entry-exit--payment-flow)
-10. [Deep Dive: Concurrency & Spot Reservation](#10-deep-dive-concurrency--spot-reservation)
-11. [Deep Dive: Real-Time Occupancy & IoT Sensors](#11-deep-dive-real-time-occupancy--iot-sensors)
-12. [Scaling & Reliability](#12-scaling--reliability)
-13. [Failure Modes & Edge Cases](#13-failure-modes--edge-cases)
-14. [Trade-offs Summary](#14-trade-offs-summary)
-15. [Interview Walkthrough Script](#15-interview-walkthrough-script)
-16. [Follow-Up Questions](#16-follow-up-questions)
-17. [Real-World References](#17-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **parking lot management system** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope single lot vs multi-floor vs multi-site |
+| Solution design | Entry → allocate → park → pay → exit |
+| Technical excellence | Best-fit, optimistic locking, sensors |
+| Communication | Concurrency when two cars want last spot | |
+
+**Suggested opening script:**
+
+> "I'll design a parking lot: vehicle entry, spot allocation, payment, and exit. My focus is atomic spot reservation and fee calculation."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a software system to manage a multi-level parking garage. The system must track available parking spots, assign spots to vehicles on entry, calculate fees on exit, process payments, and display real-time availability — supporting multiple vehicle types and pricing tiers.
 
 **What the interviewer is really testing:**
@@ -64,7 +94,6 @@ graph TB
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -155,8 +184,7 @@ graph LR
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume a **5-level parking garage**, **200 spots per level**, **1,000 total spots**, **4 entry gates**, **4 exit gates**, peak **500 entries/hour** during events.
 
 ### Garage Layout
@@ -228,8 +256,7 @@ pie title Spot Type Distribution (1000 spots)
 
 ---
 
-## 4. Core Entities
-
+## Core Entities (~2 min)
 ```mermaid
 erDiagram
     PARKING_GARAGE ||--o{ LEVEL : contains
@@ -368,8 +395,7 @@ graph TB
 
 ---
 
-## 5. API Design
-
+## API / System Interface (~5 min)
 ### Entry Gate APIs
 
 #### POST /v1/garages/{garageId}/entry
@@ -590,8 +616,7 @@ sequenceDiagram
 
 ---
 
-## 6. Data Model
-
+## Data Model / Schema
 ### PostgreSQL — Durable Records
 
 ```sql
@@ -705,8 +730,19 @@ SET lock:spot:{spot_id}  {gate_id}  NX  EX 5
 
 ---
 
-## 7. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Client Layer
@@ -798,7 +834,7 @@ flowchart TB
 
 ---
 
-## 8. Deep Dive: Spot Allocation & Best-Fit Algorithm
+### 7.2 Spot Allocation & Best-Fit Algorithm
 
 This is the **core algorithm** interviewers expect you to explain clearly.
 
@@ -900,7 +936,7 @@ graph TB
 
 ---
 
-## 9. Deep Dive: Entry, Exit & Payment Flow
+### 7.3 Entry, Exit & Payment Flow
 
 ### Fee Calculation Rules
 
@@ -997,7 +1033,7 @@ def handle_exit(ticket_code: str, license_plate: str) -> ExitResult:
 
 ---
 
-## 10. Deep Dive: Concurrency & Spot Reservation
+### 7.4 Concurrency & Spot Reservation
 
 ### The Double-Booking Problem
 
@@ -1067,7 +1103,7 @@ stateDiagram-v2
 
 ---
 
-## 11. Deep Dive: Real-Time Occupancy & IoT Sensors
+### 7.5 Real-Time Occupancy & IoT Sensors
 
 ### Sensor-Based vs Ticket-Based Tracking
 
@@ -1123,8 +1159,7 @@ FULL ↑ for Large Vehicles
 
 ---
 
-## 12. Scaling & Reliability
-
+### Scaling & Reliability
 ### Single Garage vs Multi-Location Fleet
 
 | Scale | Architecture | Example |
@@ -1177,8 +1212,7 @@ If Parking Allocation Service is down:
 
 ---
 
-## 13. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Scenario | Behavior | Mitigation |
 |----------|----------|------------|
 | **Two gates assign same spot** | Redis NX lock + Lua atomic reserve | Second gate retries with next spot |
@@ -1210,8 +1244,7 @@ def cleanup_ghost_sessions():
 
 ---
 
-## 14. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Spot assignment | First available | Best-fit + nearest | **Best-fit + nearest** — optimal utilization + UX |
@@ -1225,8 +1258,7 @@ def cleanup_ghost_sessions():
 
 ---
 
-## 15. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "I'll design a parking lot system for a 5-level garage with 1,000 spots supporting motorcycles, cars, and large vehicles. Scope: entry spot assignment, exit fee calculation, payment, and real-time availability. I'll use best-fit + nearest allocation and support monthly passes. Out of scope: physical gate mechanics."
@@ -1261,8 +1293,7 @@ Emphasize: **spot assignment must be atomic** — this is the key concurrency ch
 
 ---
 
-## 16. Follow-Up Questions
-
+## Follow-Up Questions
 1. **How would you design for a stadium event with 10,000 cars arriving in 2 hours?**
    - Pre-sell parking passes with assigned lots; open overflow lots; dynamic pricing; queue management at entry (virtual waiting line like Ticketmaster); stagger arrival windows on ticket.
 
@@ -1286,8 +1317,7 @@ Emphasize: **spot assignment must be atomic** — this is the key concurrency ch
 
 ---
 
-## 17. Real-World References
-
+## Real-World References
 | Company / System | Notable Design Choice |
 |-----------------|----------------------|
 | **SpotHero** | Multi-garage marketplace; pre-book + mobile payment; inventory API for operators |

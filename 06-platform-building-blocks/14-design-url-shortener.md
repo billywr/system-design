@@ -1,32 +1,63 @@
-# Design a URL Shortener (Bitly)
+# Design a URL Shortener
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for designing a production URL shortening service like Bitly, TinyURL, or rebrand.ly.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Medium (read-heavy + ID generation)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Base62 encoding, redirect latency, analytics, custom domains
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model](#5-data-model)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Base62 Encoding & ID Generation](#7-deep-dive-base62-encoding--id-generation)
-8. [Deep Dive: Redirect Path & Latency](#8-deep-dive-redirect-path--latency)
-9. [Deep Dive: Analytics Pipeline](#9-deep-dive-analytics-pipeline)
-10. [Deep Dive: Custom Domains & Multi-Tenancy](#10-deep-dive-custom-domains--multi-tenancy)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **URL shortening service like Bitly** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope redirect vs analytics vs custom domains |
+| Solution design | Create → store → cache → redirect |
+| Technical excellence | ID generation, cache-aside, 302 vs 301 |
+| Communication | Read:write ratio and hot key handling | |
+
+**Suggested opening script:**
+
+> "I'll design a URL shortener: create short links, sub-10ms redirects, and async analytics. I'll defer enterprise SSO unless in scope. My focus is read path optimization and ID generation."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a URL shortening service that converts long URLs into short, shareable links. When a user visits the short link, they are redirected to the original URL. The service should support analytics (click tracking), optional custom short codes, and custom branded domains for enterprise customers.
 
 **What the interviewer is really testing:**
@@ -39,7 +70,6 @@ Design a URL shortening service that converts long URLs into short, shareable li
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -108,8 +138,7 @@ graph LR
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **500M shortened URLs/month**, **5B redirects/month**, 100M DAU.
 
 ### Storage
@@ -156,8 +185,7 @@ pie title Traffic Distribution
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### REST Endpoints
 
 ```
@@ -214,8 +242,7 @@ Most production shorteners use **302** (or 307) so they can change destinations 
 
 ---
 
-## 5. Data Model
-
+## Core Entities (~2 min)
 ### Core Entities
 
 ```mermaid
@@ -284,8 +311,19 @@ TTL:   min(link_expires_at, 24h) or LRU eviction
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Client Layer
@@ -368,7 +406,9 @@ sequenceDiagram
 
 ---
 
-## 7. Deep Dive: Base62 Encoding & ID Generation
+## Deep Dives (~10 min)
+
+### 7.1 Base62 Encoding & ID Generation
 
 ### Why Base62?
 
@@ -455,7 +495,7 @@ Reserve blocklist: `admin`, `api`, `login`, profanity, brand names.
 
 ---
 
-## 8. Deep Dive: Redirect Path & Latency
+### 7.2 Redirect Path & Latency
 
 The redirect path is the **money path** — optimize ruthlessly.
 
@@ -531,7 +571,7 @@ stateDiagram-v2
 
 ---
 
-## 9. Deep Dive: Analytics Pipeline
+### 7.3 Analytics Pipeline
 
 Analytics must **never block redirects**. Use async event streaming.
 
@@ -595,7 +635,7 @@ flowchart TB
 
 ---
 
-## 10. Deep Dive: Custom Domains & Multi-Tenancy
+### 7.4 Custom Domains & Multi-Tenancy
 
 Enterprise customers want `go.acme.com/promo` instead of `bit.ly/x7Kp2m`.
 
@@ -642,8 +682,7 @@ flowchart TD
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Database Scaling
 
 ```mermaid
@@ -706,8 +745,7 @@ flowchart LR
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Redis down | Redirects slow (DB fallback) | Circuit breaker; auto-scale DB replicas |
@@ -735,8 +773,7 @@ flowchart TD
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Redirect code | 301 permanent | 302 temporary | **302** — analytics + editable destinations |
@@ -748,8 +785,7 @@ flowchart TD
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "I'll design a URL shortener like Bitly. Let me confirm scope: auto-generated 7-char codes, optional custom aliases, click analytics async, and custom domains as a stretch goal. Redirect latency is the critical metric — sub-50ms p99."
@@ -782,8 +818,7 @@ Interviewer picks 2–3:
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **How would you support link preview (unfurling)?** — HEAD endpoint returning OG tags; separate crawler service.
 2. **How to detect and block phishing?** — Safe Browsing API at create time + periodic re-scan.
 3. **Design a bulk import API for 10M URLs.** — Async job queue, batch ID pre-allocation, progress webhook.
@@ -792,8 +827,7 @@ Interviewer picks 2–3:
 
 ---
 
-## 16. Real-World References
-
+## Real-World References
 | Company | Notable Design Choice |
 |---------|----------------------|
 | **Bitly** | Custom domains, enterprise analytics, 302 redirects |
@@ -809,4 +843,10 @@ Interviewer picks 2–3:
 
 ---
 
-> **Interview Tip:** Always separate the **redirect hot path** (sync, cached, minimal) from the **create path** (consistent, validated) and the **analytics path** (async, loss-tolerant within bounds). Interviewers reward this separation more than any single algorithm choice.
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** Always separate the **redirect hot path** (sync, cached, minimal) from the **create path** (consistent, validated) and the **analytics path** (async, loss-tolerant within bounds). Interviewers reward this separation more than any single algorithm choice.
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

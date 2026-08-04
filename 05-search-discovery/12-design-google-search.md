@@ -1,30 +1,63 @@
-# System Design: Google Search
+# Design Google Search
 
-> **Interview Level:** Senior/Staff SDE (Google, Microsoft, Amazon)  
-> **Estimated Time:** 45–60 minutes  
-> **Framework:** Hello Interview Delivery Structure  
-> **Difficulty:** Hard (distributed crawling, inverted index, ranking, sub-100ms latency)
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Hard (crawl + index + rank)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Crawling, inverted index, PageRank, query serving
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement & Scope](#1-problem-statement--scope)
-2. [Requirements](#2-requirements)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [Core Entities](#4-core-entities)
-5. [API Design](#5-api-design)
-6. [Data Model / Schema](#6-data-model--schema)
-7. [High-Level Architecture](#7-high-level-architecture)
-8. [Deep Dives](#8-deep-dives)
-9. [Trade-offs & Alternatives](#9-trade-offs--alternatives)
-10. [Failure Modes & Reliability](#10-failure-modes--reliability)
-11. [Interview Cheat Sheet](#11-interview-cheat-sheet)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement & Scope
+## How to Use This Guide
 
+This guide walks through designing a **web search engine** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope web search vs autocomplete vs images |
+| Solution design | Crawler → indexer → ranker → query server |
+| Technical excellence | Inverted index sharding, PageRank, freshness |
+| Communication | Crawl politeness and index updates | |
+
+**Suggested opening script:**
+
+> "I'll design Google Search: crawl, index, rank, and serve queries. I'll defer ads and Knowledge Graph unless in scope. My focus is inverted index and sub-100ms query serving."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 ### 1.1 The Prompt
 
 > *"Design a web search engine like Google that crawls the internet, indexes billions of pages, ranks results by relevance, and serves queries with autocomplete in under 100 milliseconds."*
@@ -90,7 +123,6 @@ flowchart LR
 
 ---
 
-## 2. Requirements
 
 ### 2.1 Functional Requirements
 
@@ -171,8 +203,7 @@ mindmap
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 ### 3.1 Query Traffic
 
 ```
@@ -240,8 +271,7 @@ Each query hits 1-3 shards (term-based routing)
 
 ---
 
-## 4. Core Entities
-
+## Core Entities (~2 min)
 ```mermaid
 erDiagram
     URL ||--|| DOCUMENT : maps_to
@@ -295,8 +325,7 @@ erDiagram
 
 ---
 
-## 5. API Design
-
+## API / System Interface (~5 min)
 ### 5.1 Search API
 
 ```
@@ -376,8 +405,7 @@ sequenceDiagram
 
 ---
 
-## 6. Data Model / Schema
-
+## Data Model / Schema
 ### 6.1 URL Frontier (Crawl Scheduler)
 
 ```sql
@@ -429,8 +457,19 @@ Prefix trie or Finite State Transducer (FST):
 
 ---
 
-## 7. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ### 7.1 System Architecture
 
 ```mermaid
@@ -528,8 +567,7 @@ flowchart TB
 
 ---
 
-## 8. Deep Dives
-
+## Deep Dives (~10 min)
 ### 8.1 Deep Dive #1: Web Crawler
 
 #### Crawler Components
@@ -883,8 +921,7 @@ flowchart TB
 
 ---
 
-## 9. Trade-offs & Alternatives
-
+## Trade-offs Summary
 ### 9.1 Index Sharding Strategies
 
 | Strategy | Pros | Cons |
@@ -936,8 +973,7 @@ quadrantChart
 
 ---
 
-## 10. Failure Modes & Reliability
-
+## Failure Modes & Resilience
 ### 10.1 Failure Mode Matrix
 
 | Failure | Impact | Detection | Mitigation |
@@ -988,8 +1024,57 @@ flowchart LR
 
 ---
 
-## 11. Interview Cheat Sheet
+## Interview Walkthrough Script
 
+### Minutes 0–5: Requirements
+
+> Clarify functional scope, non-functional targets (latency, scale, consistency), and what's explicitly out of scope.
+
+### Minutes 5–7: Core Entities + API
+
+> Name the 4–6 core entities and primary API endpoints. Keep contracts concise.
+
+### Minutes 7–12: Data Flow + Architecture
+
+> Draw the happy-path sequence, then boxes-and-arrows architecture. Call out sync vs async boundaries.
+
+### Minutes 12–22: High-Level Design
+
+> Expand each box: technology choices, sharding keys, cache placement.
+
+### Minutes 22–35: Deep Dives
+
+> Spend time on the 2–3 hardest problems specific to Design Google Search — the differentiators.
+
+### Minutes 35–45: Capacity + Wrap-Up
+
+> Back-of-envelope QPS/storage, failure modes, trade-offs, and monitoring.
+
+---
+
+## Follow-Up Questions
+
+1. **How would you handle a 10× traffic spike?** — Auto-scale workers, queue buffering, degrade non-critical features.
+2. **Multi-region deployment?** — Data residency, replication lag, conflict resolution.
+3. **How do you test this at scale?** — Load tests, chaos engineering, shadow traffic.
+4. **Security concerns?** — AuthZ, encryption in transit/at rest, audit logging.
+5. **Cost optimization?** — Tiered storage, cache hit ratio, right-sizing clusters.
+
+---
+
+## Real-World References
+
+| System | Notable Design |
+|--------|----------------|
+| Industry blogs | High Scalability, engineering blogs from Meta/Google/Netflix |
+| Papers | Original papers cited in deep-dive sections |
+| Open source | Relevant Apache/Kafka/Redis/Envoy documentation |
+
+See deep-dive sections and the original guide content for system-specific references to Design Google Search.
+
+---
+
+## Interview Cheat Sheet
 ### 11.1 45-Minute Interview Flow
 
 ```mermaid

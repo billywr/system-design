@@ -1,32 +1,63 @@
-# Design a Distributed Cache (Redis)
+# Design a Distributed Cache
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for building a production distributed caching layer like Redis Cluster, Amazon ElastiCache, or a custom memcached tier.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Hard (consistent hashing + eviction)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Consistent hashing, eviction policies, cache-aside vs write-through
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model & Key Design](#5-data-model--key-design)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Consistent Hashing](#7-deep-dive-consistent-hashing)
-8. [Deep Dive: Eviction Policies](#8-deep-dive-eviction-policies)
-9. [Deep Dive: Replication & Failover](#9-deep-dive-replication--failover)
-10. [Deep Dive: Cache-Aside vs Write-Through](#10-deep-dive-cache-aside-vs-write-through)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **Redis-like distributed cache** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope L1 vs L2 vs CDN edge |
+| Solution design | Client → proxy → shard → replica |
+| Technical excellence | Consistent hashing, eviction, thundering herd |
+| Communication | Cache-aside vs write-through trade-offs | |
+
+**Suggested opening script:**
+
+> "I'll design a distributed cache: sharding, replication, and eviction. My focus is consistent hashing and cache invalidation patterns."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a distributed in-memory cache that sits between application servers and a persistent database. The cache reduces read latency, offloads database load, and improves system throughput. The design must handle node failures, data partitioning across a cluster, memory limits with eviction, and consistency with the backing store.
 
 **What the interviewer is really testing:**
@@ -39,7 +70,6 @@ Design a distributed in-memory cache that sits between application servers and a
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -103,8 +133,7 @@ graph TB
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **e-commerce catalog** backing store: 500M products, 100K QPS reads, 5K QPS writes.
 
 ### Memory Sizing
@@ -144,8 +173,7 @@ pie title Read Traffic Outcome
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### Client-Facing Operations
 
 ```
@@ -237,8 +265,19 @@ flowchart TD
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Application Tier
@@ -295,7 +334,9 @@ flowchart LR
 
 ---
 
-## 7. Deep Dive: Consistent Hashing
+## Deep Dives (~10 min)
+
+### 7.1 Consistent Hashing
 
 ### The Problem with `hash(key) mod N`
 
@@ -390,7 +431,7 @@ sequenceDiagram
 
 ---
 
-## 8. Deep Dive: Eviction Policies
+### 7.2 Eviction Policies
 
 When memory is full, the cache must evict keys. Wrong policy → hit ratio collapse.
 
@@ -457,7 +498,7 @@ Mitigation: increase memory, tighten TTLs, reduce cached payload size
 
 ---
 
-## 9. Deep Dive: Replication & Failover
+### 7.3 Replication & Failover
 
 ### Primary-Replica Topology
 
@@ -530,7 +571,7 @@ flowchart TD
 
 ---
 
-## 10. Deep Dive: Cache-Aside vs Write-Through
+### 7.4 Cache-Aside vs Write-Through
 
 ### Pattern 1: Cache-Aside (Lazy Loading)
 
@@ -642,8 +683,7 @@ Techniques:
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Horizontal Scaling Checklist
 
 ```mermaid
@@ -694,8 +734,7 @@ flowchart LR
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Master crash | Writes fail for shard | Sentinel auto-failover (< 30s) |
@@ -726,8 +765,7 @@ Many keys expire simultaneously → mass DB load.
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Partitioning | Consistent hash ring | Fixed hash slots | **Hash slots** (Redis Cluster standard) |
@@ -739,8 +777,7 @@ Many keys expire simultaneously → mass DB load.
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "I'll design a distributed cache like Redis Cluster for a read-heavy e-commerce catalog. 95% hit ratio target, sub-ms latency, 10 TB scale. DB remains source of truth — cache is best-effort durable."
@@ -770,8 +807,7 @@ Pick 2–3:
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **How would you cache a leaderboard?** — Redis sorted sets (ZADD/ZRANGE); periodic snapshot to DB.
 2. **Design cache for search results.** — Cache query hash → result IDs; short TTL (60s); invalidate on index update.
 3. **Compare Redis vs Memcached.** — Redis: data structures, persistence, cluster; Memcached: simpler, multithreaded, pure KV.
@@ -780,8 +816,7 @@ Pick 2–3:
 
 ---
 
-## 16. Real-World References
-
+## Real-World References
 | System | Approach |
 |--------|----------|
 | **Redis Cluster** | 16K hash slots, async replication, Sentinel failover |
@@ -798,4 +833,10 @@ Pick 2–3:
 
 ---
 
-> **Interview Tip:** Always state that **cache is not a database**. Design for miss tolerance, monitor hit ratio, and explain invalidation strategy before the interviewer asks "what happens when data changes?"
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** Always state that **cache is not a database**. Design for miss tolerance, monitor hit ratio, and explain invalidation strategy before the interviewer asks "what happens when data changes?"
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

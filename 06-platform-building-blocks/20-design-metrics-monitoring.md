@@ -1,32 +1,63 @@
-# Design a Metrics & Monitoring System (Datadog)
+# Design Metrics & Monitoring
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for building a production metrics and monitoring platform like Datadog, Prometheus + Grafana, CloudWatch, or SignalFx.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Hard (time-series at scale)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Time-series DB, aggregation, alerting, cardinality
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model](#5-data-model)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Time-Series Database](#7-deep-dive-time-series-database)
-8. [Deep Dive: Aggregation Pipeline](#8-deep-dive-aggregation-pipeline)
-9. [Deep Dive: Alerting Engine](#9-deep-dive-alerting-engine)
-10. [Deep Dive: Cardinality Management](#10-deep-dive-cardinality-management)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **metrics platform like Datadog** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope metrics vs logs vs traces |
+| Solution design | Agent → ingest → TSDB → query → alert |
+| Technical excellence | Cardinality, rollups, retention tiers |
+| Communication | SLI/SLO and alert fatigue | |
+
+**Suggested opening script:**
+
+> "I'll design a metrics system: ingest, store, query, and alert. My focus is cardinality management and downsampling."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a metrics and monitoring system that collects time-series data from thousands of services, stores it efficiently, enables querying and dashboard visualization, and triggers alerts when metrics cross thresholds. The system must handle high ingestion throughput, support dimensional tagging, manage cardinality explosion, and provide sub-second query response for operational dashboards.
 
 **What the interviewer is really testing:**
@@ -39,7 +70,6 @@ Design a metrics and monitoring system that collects time-series data from thous
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -102,8 +132,7 @@ graph TB
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **10,000 hosts**, **500 custom metrics/host**, **15-sec scrape interval**, **10 tag dimensions** average.
 
 ### Ingest Volume
@@ -148,8 +177,7 @@ pie title Storage by Tier
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### Ingest Metrics (Push — DogStatsD / HTTP)
 
 ```http
@@ -231,8 +259,7 @@ POST /api/v1/monitor
 
 ---
 
-## 5. Data Model
-
+## Core Entities (~2 min)
 ### Metric Types
 
 | Type | Description | Example | Aggregation |
@@ -295,8 +322,19 @@ Enables: fast lookup of all series matching {env:prod, service:checkout}
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Data Sources
@@ -384,7 +422,9 @@ sequenceDiagram
 
 ---
 
-## 7. Deep Dive: Time-Series Database
+## Deep Dives (~10 min)
+
+### 7.1 Time-Series Database
 
 ### Why Not PostgreSQL?
 
@@ -464,7 +504,7 @@ Optimization: shard by tenant_id for multi-tenancy isolation
 
 ---
 
-## 8. Deep Dive: Aggregation Pipeline
+### 7.2 Aggregation Pipeline
 
 ### Ingest-Time Aggregation (Pre-Computation)
 
@@ -551,7 +591,7 @@ Server merges buckets across hosts:
 
 ---
 
-## 9. Deep Dive: Alerting Engine
+### 7.3 Alerting Engine
 
 ### Alert Evaluation Loop
 
@@ -630,7 +670,7 @@ flowchart LR
 
 ---
 
-## 10. Deep Dive: Cardinality Management
+### 7.4 Cardinality Management
 
 ### What Is Cardinality?
 
@@ -728,8 +768,7 @@ datadog.alert.evaluation_lag
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Ingestion Scaling
 
 ```mermaid
@@ -792,8 +831,7 @@ flowchart TB
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Cardinality explosion | Cluster OOM | Limits + denylist |
@@ -827,8 +865,7 @@ flowchart TD
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Ingest | Push (Datadog agent) | Pull (Prometheus scrape) | **Both** — agent for hosts, pull for K8s |
@@ -840,8 +877,7 @@ flowchart TD
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "Metrics platform like Datadog: 10M points/sec ingest, 15-day raw + 13-month rollup retention, sub-second dashboard queries, threshold and anomaly alerts, multi-tenant."
@@ -867,8 +903,7 @@ Draw agents → intake → Kafka → TSDB writers → hot/warm/cold storage. Que
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **Design log aggregation (ELK/Datadog Logs).** — Inverted index vs columnar; different from metrics TSDB.
 2. **Design distributed tracing (Jaeger/Tempo).** — Trace ID propagation; span storage; correlation with metrics.
 3. **Prometheus vs Datadog architecture.** — Pull vs push; PromQL vs query language; federation vs SaaS multi-tenant.
@@ -877,8 +912,7 @@ Draw agents → intake → Kafka → TSDB writers → hot/warm/cold storage. Que
 
 ---
 
-## 16. Real-World References
-
+## Real-World References
 | System | Architecture Highlight |
 |--------|----------------------|
 | **Datadog** | Multi-tenant SaaS, DogStatsD push, proprietary TSDB |
@@ -898,4 +932,10 @@ Draw agents → intake → Kafka → TSDB writers → hot/warm/cold storage. Que
 
 ---
 
-> **Interview Tip:** When discussing metrics systems, **bring up cardinality unprompted** — it's the distinguishing senior-level insight that separates a generic "store time-series in a DB" answer from a production-ready Datadog-class design.
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** When discussing metrics systems, **bring up cardinality unprompted** — it's the distinguishing senior-level insight that separates a generic "store time-series in a DB" answer from a production-ready Datadog-class design.
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

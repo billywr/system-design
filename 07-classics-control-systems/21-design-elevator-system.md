@@ -1,33 +1,63 @@
 # Design an Elevator System
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for designing a multi-elevator control system for a commercial high-rise building (Otis, Schindler, KONE bar).
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Medium (state machine + scheduling)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** State machine, SCAN/LOOK dispatch, actor model, safety
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [Core Entities](#4-core-entities)
-5. [API Design](#5-api-design)
-6. [Data Model](#6-data-model)
-7. [High-Level Architecture](#7-high-level-architecture)
-8. [Deep Dive: Elevator State Machine](#8-deep-dive-elevator-state-machine)
-9. [Deep Dive: Dispatch & Scheduling Algorithms](#9-deep-dive-dispatch--scheduling-algorithms)
-10. [Deep Dive: Multi-Elevator Coordination](#10-deep-dive-multi-elevator-coordination)
-11. [Deep Dive: Safety, Failover & Edge Cases](#11-deep-dive-safety-failover--edge-cases)
-12. [Scaling & Reliability](#12-scaling--reliability)
-13. [Failure Modes & Edge Cases](#13-failure-modes--edge-cases)
-14. [Trade-offs Summary](#14-trade-offs-summary)
-15. [Interview Walkthrough Script](#15-interview-walkthrough-script)
-16. [Follow-Up Questions](#16-follow-up-questions)
-17. [Real-World References](#17-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **multi-elevator control system** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope single vs bank of elevators |
+| Solution design | Request → scheduler → elevator state machine |
+| Technical excellence | SCAN vs destination dispatch, concurrency |
+| Communication | Safety interlocks and failure modes | |
+
+**Suggested opening script:**
+
+> "I'll design an elevator system for a building: request handling, dispatch algorithm, and safety. My focus is the scheduling algorithm and state machine."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design the software system that controls multiple elevators in a commercial building. The system must accept passenger requests (hall calls and cabin selections), assign the optimal elevator, move cars safely between floors, and minimize average wait time while respecting safety constraints.
 
 **What the interviewer is really testing:**
@@ -68,7 +98,6 @@ graph TB
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -155,8 +184,7 @@ graph LR
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume a **50-floor commercial office tower**, **8 elevators** (2 banks of 4), **5,000 occupants**, peak morning rush **8:00–9:30 AM**.
 
 ### Traffic Profile
@@ -212,8 +240,7 @@ pie title Peak Request Distribution
 
 ---
 
-## 4. Core Entities
-
+## Core Entities (~2 min)
 ```mermaid
 erDiagram
     BUILDING ||--o{ ELEVATOR_BANK : contains
@@ -304,8 +331,7 @@ erDiagram
 
 ---
 
-## 5. API Design
-
+## API / System Interface (~5 min)
 ### External APIs (Building Management / Mobile App)
 
 #### POST /v1/buildings/{buildingId}/hall-calls
@@ -463,8 +489,7 @@ sequenceDiagram
 
 ---
 
-## 6. Data Model
-
+## Data Model / Schema
 ### Building Configuration (PostgreSQL — rarely changes)
 
 ```sql
@@ -553,8 +578,19 @@ CREATE TABLE hall_call_events (
 
 ---
 
-## 7. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Client Layer
@@ -650,7 +686,7 @@ flowchart LR
 
 ---
 
-## 8. Deep Dive: Elevator State Machine
+### 7.2 Elevator State Machine
 
 Each elevator car is modeled as a **finite state machine**. This is the core of the design — interviewers expect you to draw this clearly.
 
@@ -771,7 +807,7 @@ graph TB
 
 ---
 
-## 9. Deep Dive: Dispatch & Scheduling Algorithms
+### 7.3 Dispatch & Scheduling Algorithms
 
 This is the **most important deep dive** — the interviewer will ask you to compare algorithms.
 
@@ -871,7 +907,7 @@ flowchart TB
 
 ---
 
-## 10. Deep Dive: Multi-Elevator Coordination
+### 7.4 Multi-Elevator Coordination
 
 ### Bank Partitioning (50-floor building, 8 cars)
 
@@ -966,7 +1002,7 @@ Each car actor:
 
 ---
 
-## 11. Deep Dive: Safety, Failover & Edge Cases
+### 7.5 Safety, Failover & Edge Cases
 
 ### Safety Interlocks (Non-Negotiable — Always Checked First)
 
@@ -1031,8 +1067,7 @@ Layer 3 — Manual Override:
 
 ---
 
-## 12. Scaling & Reliability
-
+### Scaling & Reliability
 ### Single Building vs Fleet
 
 | Scale | Architecture | Notes |
@@ -1077,8 +1112,7 @@ flowchart TB
 
 ---
 
-## 13. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Scenario | Behavior | Mitigation |
 |----------|----------|------------|
 | **Passenger stuck between floors** | PLC detects position encoder mismatch | Stop motor; activate alarm; notify technician via IoT |
@@ -1104,8 +1138,7 @@ flowchart TD
 
 ---
 
-## 14. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Dispatch algorithm | SCAN/LOOK (traditional) | Destination dispatch | **Destination dispatch** for new buildings; 30–40% wait time reduction |
@@ -1119,8 +1152,7 @@ flowchart TD
 
 ---
 
-## 15. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "I'll design an elevator control system for a 50-floor office building with 8 elevators in 2 banks. Scope: hall calls, cabin floor selection, multi-car dispatch, and safety overrides. I'll optimize for average wait time and assume destination dispatch panels at the lobby. Out of scope: mechanical/motor design."
@@ -1156,8 +1188,7 @@ Emphasize: **safety supervisor is a separate concern** that can override any car
 
 ---
 
-## 16. Follow-Up Questions
-
+## Follow-Up Questions
 1. **How would you handle 100 floors and 20 elevators?**
    - Partition into 4 banks of 5 cars; sky lobbies at floors 25, 50, 75; independent schedulers per bank with a coordinator for transfer-floor traffic.
 
@@ -1181,8 +1212,7 @@ Emphasize: **safety supervisor is a separate concern** that can override any car
 
 ---
 
-## 17. Real-World References
-
+## Real-World References
 | Company / Standard | Notable Design Choice |
 |--------------------|----------------------|
 | **Otis (OmniPass)** | Destination dispatch pioneered commercially; 30% wait time reduction |

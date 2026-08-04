@@ -1,32 +1,64 @@
 # Design a Distributed Rate Limiter
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for building a production rate limiting service used at API gateways, microservice edges, and platform infrastructure layers.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Medium-Hard (algorithms + Redis)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Token bucket, sliding window, Redis Lua, Python implementations
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model](#5-data-model)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Token Bucket Algorithm](#7-deep-dive-token-bucket-algorithm)
-8. [Deep Dive: Sliding Window Log & Counter](#8-deep-dive-sliding-window-log--counter)
-9. [Deep Dive: Redis vs Local Rate Limiting](#9-deep-dive-redis-vs-local-rate-limiting)
-10. [Deep Dive: Per-User vs Global Limits](#10-deep-dive-per-user-vs-global-limits)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Python Reference Implementations](#python-reference-implementations)
+14. [Real-World References](#real-world-references)
+15. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **API rate limiting service** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope per-user vs per-IP vs global |
+| Solution design | Gateway → local pre-filter → Redis Lua |
+| Technical excellence | Algorithm comparison, race conditions |
+| Communication | Fail-open vs fail-closed policy | |
+
+**Suggested opening script:**
+
+> "I'll design a distributed rate limiter: per-user and global limits, sub-5ms decisions, 429 responses. My focus is sliding window counter and Redis atomicity."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a distributed rate limiter that controls the number of requests a client (user, API key, IP address) or the entire system can make within a time window. The limiter must work correctly across multiple server instances, support different rate limit tiers, and return clear feedback (HTTP 429, Retry-After header) when limits are exceeded.
 
 **What the interviewer is really testing:**
@@ -39,7 +71,6 @@ Design a distributed rate limiter that controls the number of requests a client 
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -95,8 +126,7 @@ graph TB
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **public API**: 500K RPS aggregate, 1M unique API keys, average 3 rate limit checks per request (global + user + endpoint).
 
 ### Rate Limit Checks
@@ -134,8 +164,7 @@ pie title Limit Check Types
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### Internal Rate Limit Check (Sidecar / Middleware)
 
 ```http
@@ -197,8 +226,7 @@ PUT /v1/ratelimit/rules
 
 ---
 
-## 5. Data Model
-
+## Core Entities (~2 min)
 ### Rate Limit Key Schema
 
 ```
@@ -242,8 +270,19 @@ erDiagram
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Client Layer
@@ -311,7 +350,9 @@ sequenceDiagram
 
 ---
 
-## 7. Deep Dive: Token Bucket Algorithm
+## Deep Dives (~10 min)
+
+### 7.1 Token Bucket Algorithm
 
 ### Concept
 
@@ -340,19 +381,12 @@ last_refill_timestamp: 1720430400.500
 
 ### Refill Logic
 
-```python
-def allow_request(bucket):
-    now = time.time()
-    elapsed = now - bucket.last_refill
-    bucket.tokens = min(
-        bucket.capacity,
-        bucket.tokens + elapsed * bucket.refill_rate
-    )
-    bucket.last_refill = now
-    if bucket.tokens >= 1:
-        bucket.tokens -= 1
-        return True
-    return False
+See [Python Reference Implementations](#python-reference-implementations) for the full `TokenBucketRateLimiter` class. Core math:
+
+```
+elapsed = now - last_refill
+tokens = min(capacity, tokens + elapsed × refill_rate)
+if tokens >= cost: allow and deduct
 ```
 
 ### Token Bucket in Distributed Redis (Lua Script)
@@ -396,7 +430,7 @@ sequenceDiagram
 
 ---
 
-## 8. Deep Dive: Sliding Window Log & Counter
+### 7.2 Sliding Window Log & Counter
 
 ### Fixed Window Problem
 
@@ -505,7 +539,7 @@ quadrantChart
 
 ---
 
-## 9. Deep Dive: Redis vs Local Rate Limiting
+### 7.3 Redis vs Local Rate Limiting
 
 ### Local (In-Process) Limiter
 
@@ -580,7 +614,7 @@ flowchart TD
 
 ---
 
-## 10. Deep Dive: Per-User vs Global Limits
+### 7.4 Per-User vs Global Limits
 
 ### Two-Tier Hierarchy
 
@@ -658,8 +692,7 @@ Deduct `cost` tokens instead of 1 per request
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Redis Cluster for Rate Limiting
 
 ```
@@ -716,8 +749,7 @@ Rules propagate in < 5 seconds via watch mechanism.
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Redis latency spike | Slow API responses | Local fallback; circuit breaker |
@@ -744,8 +776,7 @@ Mitigation: Short local TTL (100ms); sync every N requests
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Algorithm | Token bucket | Sliding window counter | **SWC** for RPM limits; **TB** for burst |
@@ -756,8 +787,7 @@ Mitigation: Short local TTL (100ms); sync every N requests
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "Distributed rate limiter for a public API: 500K RPS, per-API-key limits with burst, global system cap, sub-5ms decision latency, 429 with Retry-After."
@@ -783,8 +813,7 @@ Draw gateway → local bucket → Redis Lua script → allow/deny. Explain stand
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **Rate limit WebSocket connections?** — Connection count limit per IP; message rate limit per connection.
 2. **Design rate limiter without Redis.** — Gossip protocol (Envoy global rate limit); CRDT counters.
 3. **How does Stripe implement rate limiting?** — Sliding window counter blog post; leaky bucket variant.
@@ -793,8 +822,186 @@ Draw gateway → local bucket → Redis Lua script → allow/deny. Explain stand
 
 ---
 
-## 16. Real-World References
+## Python Reference Implementations
 
+Runnable **local** (in-process) implementations for learning, unit tests, and middleware prototypes. Production distributed rate limiting uses the Redis Lua scripts above for atomic read-modify-write across pods.
+
+### Shared Types
+
+```python
+import threading
+import time
+from collections import deque
+from dataclasses import dataclass
+from typing import Dict, Protocol
+
+
+@dataclass(frozen=True)
+class RateLimitResult:
+    allowed: bool
+    remaining: int
+    reset_at: float  # unix timestamp
+
+
+class RateLimiter(Protocol):
+    def allow(self, key: str = "default", cost: int = 1) -> RateLimitResult: ...
+```
+
+### TokenBucketRateLimiter
+
+```python
+@dataclass
+class _TokenBucketState:
+    tokens: float
+    last_refill: float
+
+
+class TokenBucketRateLimiter:
+    def __init__(self, capacity: float, refill_rate: float):
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+        self._buckets: Dict[str, _TokenBucketState] = {}
+        self._lock = threading.Lock()
+
+    def allow(self, key: str = "default", cost: int = 1) -> RateLimitResult:
+        now = time.time()
+        with self._lock:
+            bucket = self._buckets.get(key)
+            if bucket is None:
+                bucket = _TokenBucketState(tokens=self.capacity, last_refill=now)
+                self._buckets[key] = bucket
+            elapsed = now - bucket.last_refill
+            bucket.tokens = min(self.capacity, bucket.tokens + elapsed * self.refill_rate)
+            bucket.last_refill = now
+            if bucket.tokens >= cost:
+                bucket.tokens -= cost
+                reset_at = now + (self.capacity - bucket.tokens) / self.refill_rate
+                return RateLimitResult(True, int(bucket.tokens), reset_at)
+            retry_after = (cost - bucket.tokens) / self.refill_rate
+            return RateLimitResult(False, 0, now + retry_after)
+```
+
+### FixedWindowRateLimiter
+
+Demonstrates the **boundary burst problem** (100 req at 12:00:59 + 100 at 12:01:00).
+
+```python
+@dataclass
+class _FixedWindowState:
+    window_id: int
+    count: int
+
+
+class FixedWindowRateLimiter:
+    def __init__(self, limit: int, window_seconds: int):
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._windows: Dict[str, _FixedWindowState] = {}
+        self._lock = threading.Lock()
+
+    def allow(self, key: str = "default", cost: int = 1) -> RateLimitResult:
+        now = time.time()
+        wid = int(now // self.window_seconds)
+        reset_at = (wid + 1) * self.window_seconds
+        with self._lock:
+            state = self._windows.get(key)
+            if state is None or state.window_id != wid:
+                state = _FixedWindowState(window_id=wid, count=0)
+                self._windows[key] = state
+            if state.count + cost <= self.limit:
+                state.count += cost
+                return RateLimitResult(True, self.limit - state.count, reset_at)
+            return RateLimitResult(False, 0, reset_at)
+```
+
+### SlidingWindowCounterRateLimiter
+
+Stripe-style weighted counter. At T=105 with prev=40, current=30, limit=100: weighted = 40×0.25 + 30 = **40 → allow**.
+
+```python
+@dataclass
+class _SlidingCounterState:
+    previous_count: int
+    current_count: int
+    window_start: float
+
+
+class SlidingWindowCounterRateLimiter:
+    def __init__(self, limit: int, window_seconds: int):
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._states: Dict[str, _SlidingCounterState] = {}
+        self._lock = threading.Lock()
+
+    def _weighted(self, state: _SlidingCounterState, now: float) -> float:
+        elapsed = now - state.window_start
+        if elapsed >= self.window_seconds:
+            return 0.0
+        overlap = 1.0 - elapsed / self.window_seconds
+        return state.previous_count * overlap + state.current_count
+
+    def allow(self, key: str = "default", cost: int = 1) -> RateLimitResult:
+        now = time.time()
+        reset_at = now + self.window_seconds
+        with self._lock:
+            state = self._states.setdefault(
+                key, _SlidingCounterState(0, 0, now)
+            )
+            if now - state.window_start >= self.window_seconds:
+                state.previous_count = state.current_count
+                state.current_count = 0
+                state.window_start = now
+            weighted = self._weighted(state, now)
+            if weighted + cost <= self.limit:
+                state.current_count += cost
+                return RateLimitResult(True, max(0, int(self.limit - weighted - cost)), reset_at)
+            return RateLimitResult(False, 0, reset_at)
+```
+
+### SlidingWindowLogRateLimiter
+
+Exact limits; O(n) memory per key — low RPS or tests only.
+
+```python
+class SlidingWindowLogRateLimiter:
+    def __init__(self, limit: int, window_seconds: int):
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._logs: Dict[str, deque] = {}
+        self._lock = threading.Lock()
+
+    def allow(self, key: str = "default", cost: int = 1) -> RateLimitResult:
+        now = time.time()
+        reset_at = now + self.window_seconds
+        with self._lock:
+            log = self._logs.setdefault(key, deque())
+            cutoff = now - self.window_seconds
+            while log and log[0] <= cutoff:
+                log.popleft()
+            if len(log) + cost <= self.limit:
+                for _ in range(cost):
+                    log.append(now)
+                return RateLimitResult(True, self.limit - len(log), reset_at)
+            retry_at = log[0] + self.window_seconds if log else now
+            return RateLimitResult(False, 0, retry_at)
+```
+
+### Usage Example
+
+```python
+limiter = SlidingWindowCounterRateLimiter(limit=100, window_seconds=60)
+for i in range(105):
+    result = limiter.allow("user:abc")
+    if not result.allowed:
+        print(f"429 — retry after {result.reset_at - time.time():.1f}s")
+        break
+```
+
+**Distributed production:** Port logic to Redis Lua (sections above). Python classes are single-process only.
+
+---
+
+## Real-World References
 | System | Approach |
 |--------|----------|
 | **Stripe** | Sliding window counter (Redis) |
@@ -812,4 +1019,10 @@ Draw gateway → local bucket → Redis Lua script → allow/deny. Explain stand
 
 ---
 
-> **Interview Tip:** Always draw the **fixed window boundary burst** problem first — it motivates sliding window and shows algorithm depth. Then recommend sliding window counter as the production sweet spot.
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** Always draw the **fixed window boundary burst** problem first — it motivates sliding window and shows algorithm depth. Then recommend sliding window counter as the production sweet spot.
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

@@ -1,32 +1,63 @@
 # Design a Notification System
 
-> **Hello Interview Framework** — A Big Tech–level system design guide for building a multi-channel notification platform like Firebase Cloud Messaging, Amazon SNS, Twilio Notify, or LinkedIn's notification engine.
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Hard (multi-channel async pipeline + fan-out at scale)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** Multi-channel delivery, priority queues, fan-out, idempotency, templates
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model](#5-data-model)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: Multi-Channel Delivery](#7-deep-dive-multi-channel-delivery)
-8. [Deep Dive: Fan-Out Strategies](#8-deep-dive-fan-out-strategies)
-9. [Deep Dive: Templates & Personalization](#9-deep-dive-templates--personalization)
-10. [Deep Dive: Delivery Guarantees](#10-deep-dive-delivery-guarantees)
-11. [Scaling & Reliability](#11-scaling--reliability)
-12. [Failure Modes & Edge Cases](#12-failure-modes--edge-cases)
-13. [Trade-offs Summary](#13-trade-offs-summary)
-14. [Interview Walkthrough Script](#14-interview-walkthrough-script)
-15. [Follow-Up Questions](#15-follow-up-questions)
-16. [Real-World References](#16-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **multi-channel notification platform** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope transactional vs marketing; channels in/out |
+| Solution design | Async pipeline with priority queues and channel workers |
+| Technical excellence | Fan-out hybrid, idempotency layers, template rendering |
+| Communication | Never drop P0; degrade P3 first | |
+
+**Suggested opening script:**
+
+> "I'll design a multi-channel notification platform: push, email, SMS, and in-app. Transactional P0 with 5-second SLA; marketing async with rate limiting. My focus is async 202 pattern and fan-out at scale."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a notification system that delivers messages to users across multiple channels (push, email, SMS, in-app). The system supports transactional notifications (password reset, order confirmation) and marketing campaigns (promotions, digests). It must handle template rendering, user preferences, delivery guarantees, and massive fan-out when a single event triggers millions of notifications.
 
 **What the interviewer is really testing:**
@@ -39,7 +70,6 @@ Design a notification system that delivers messages to users across multiple cha
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -109,8 +139,7 @@ graph LR
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **500M DAU**, average **5 notifications/user/day**, mix: 60% push, 25% email, 10% in-app, 5% SMS.
 
 ### Volume
@@ -152,8 +181,7 @@ pie title Channel Distribution
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### Send Notification (Single User)
 
 ```http
@@ -226,8 +254,7 @@ POST {sender_callback_url}
 
 ---
 
-## 5. Data Model
-
+## Core Entities (~2 min)
 ```mermaid
 erDiagram
     USER ||--o{ DEVICE_TOKEN : registers
@@ -301,8 +328,19 @@ stateDiagram-v2
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ```mermaid
 flowchart TB
     subgraph Producers
@@ -400,7 +438,9 @@ sequenceDiagram
 
 ---
 
-## 7. Deep Dive: Multi-Channel Delivery
+## Deep Dives (~10 min)
+
+### 7.1 Multi-Channel Delivery
 
 ### Channel Abstraction Layer
 
@@ -510,7 +550,7 @@ flowchart TD
 
 ---
 
-## 8. Deep Dive: Fan-Out Strategies
+### 7.2 Fan-Out Strategies
 
 ### Scenario A: Single User, Multi-Channel (Fan-Out = 2–4)
 
@@ -589,7 +629,7 @@ Acceptable for non-critical social; use rate_limit param for campaigns
 
 ---
 
-## 9. Deep Dive: Templates & Personalization
+### 7.3 Templates & Personalization
 
 ### Template Structure
 
@@ -661,7 +701,7 @@ flowchart TD
 
 ---
 
-## 10. Deep Dive: Delivery Guarantees
+### 7.4 Delivery Guarantees
 
 ### Semantics Comparison
 
@@ -746,8 +786,7 @@ flowchart LR
 
 ---
 
-## 11. Scaling & Reliability
-
+### Scaling & Reliability
 ### Queue Technology Choice
 
 | System | Throughput | Ordering | Use Case |
@@ -804,8 +843,7 @@ flowchart LR
 
 ---
 
-## 12. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Failure | Impact | Mitigation |
 |---------|--------|------------|
 | Provider outage (FCM down) | Push fails | Failover provider; queue and retry |
@@ -837,8 +875,7 @@ flowchart TD
 
 ---
 
-## 13. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Fan-out | Push (write) | Pull (read) | **Hybrid** by follower count |
@@ -849,8 +886,7 @@ flowchart TD
 
 ---
 
-## 14. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Requirements
 
 > "Multi-channel notification platform: push, email, SMS, in-app. Transactional P0 with 5-second SLA, marketing campaigns at 10M/min. User preferences and idempotency required."
@@ -876,8 +912,7 @@ Draw producers → API → router → priority queues → channel workers → pr
 
 ---
 
-## 15. Follow-Up Questions
-
+## Follow-Up Questions
 1. **Design a notification digest (daily email summary).** — Aggregation window in Flink; single email per user per day.
 2. **How to handle notification grouping on mobile?** — `collapse_key` (Android), `thread-id` (iOS), summary notification pattern.
 3. **Design real-time typing indicators vs notifications.** — Typing = WebSocket ephemeral; notifications = async queue (different system).
@@ -886,8 +921,7 @@ Draw producers → API → router → priority queues → channel workers → pr
 
 ---
 
-## 16. Real-World References
-
+## Real-World References
 | System | Notable Design |
 |--------|----------------|
 | **LinkedIn** | Kafka + Samza for fan-out; priority tiers |
@@ -898,4 +932,10 @@ Draw producers → API → router → priority queues → channel workers → pr
 
 ---
 
-> **Interview Tip:** Lead with the **async 202 pattern** — notification systems are never synchronous. Separate routing (what to send) from delivery (how to send) from tracking (did it arrive).
+---
+
+## Interview Cheat Sheet
+
+**Lead with:** Lead with the **async 202 pattern** — notification systems are never synchronous. Separate routing (what to send) from delivery (how to send) from tracking (did it arrive).
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.

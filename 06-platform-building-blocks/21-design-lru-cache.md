@@ -1,33 +1,63 @@
 # Design an LRU Cache
 
-> **Hello Interview Framework** — A Big Tech–level guide for the classic **LRU Cache** interview question at two levels: in-memory O(1) data structure design (LeetCode / OOD) and production **distributed LRU cache** service design (Redis, Memcached, application caches).
+> **Framework:** [Hello Interview Delivery Framework](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery)  
+> **Difficulty:** Medium (OOD + distributed extension)  
+> **Time budget:** 45 minutes  
+> **Primary topics:** HashMap + DLL O(1), thread safety, distributed sharding
 
 ---
 
 ## Table of Contents
 
-1. [Problem Statement](#1-problem-statement)
-2. [Requirements Clarification](#2-requirements-clarification)
-3. [Capacity Estimation](#3-capacity-estimation)
-4. [API Design](#4-api-design)
-5. [Data Model & Core Algorithm](#5-data-model--core-algorithm)
-6. [High-Level Architecture](#6-high-level-architecture)
-7. [Deep Dive: O(1) In-Memory LRU](#7-deep-dive-o1-in-memory-lru)
-8. [Deep Dive: Thread Safety & Concurrency](#8-deep-dive-thread-safety--concurrency)
-9. [Deep Dive: Distributed LRU Cache](#9-deep-dive-distributed-lru-cache)
-10. [Deep Dive: LRU vs Other Eviction Policies](#10-deep-dive-lru-vs-other-eviction-policies)
-11. [Deep Dive: Multi-Level Cache (L1 + L2)](#11-deep-dive-multi-level-cache-l1--l2)
-12. [Scaling & Reliability](#12-scaling--reliability)
-13. [Failure Modes & Edge Cases](#13-failure-modes--edge-cases)
-14. [Trade-offs Summary](#14-trade-offs-summary)
-15. [Interview Walkthrough Script](#15-interview-walkthrough-script)
-16. [Follow-Up Questions](#16-follow-up-questions)
-17. [Real-World References](#17-real-world-references)
+1. [How to Use This Guide](#how-to-use-this-guide)
+2. [Requirements (~5 min)](#requirements-5-min)
+3. [Core Entities (~2 min)](#core-entities-2-min)
+4. [API / System Interface (~5 min)](#api--system-interface-5-min)
+5. [Data Flow (~5 min)](#data-flow-5-min)
+6. [High-Level Design (~10–15 min)](#high-level-design-1015-min)
+7. [Deep Dives (~10 min)](#deep-dives-10-min)
+8. [Capacity & Sizing](#capacity--sizing)
+9. [Failure Modes & Resilience](#failure-modes--resilience)
+10. [Trade-offs Summary](#trade-offs-summary)
+11. [Interview Walkthrough Script](#interview-walkthrough-script)
+12. [Follow-Up Questions](#follow-up-questions)
+13. [Real-World References](#real-world-references)
+14. [Interview Cheat Sheet](#interview-cheat-sheet)
 
 ---
 
-## 1. Problem Statement
+## How to Use This Guide
 
+This guide walks through designing a **LRU cache (local and distributed)** at Big Tech interview depth. Follow the Hello Interview pacing: clarify scope early, draw boxes before optimizing, and spend deep-dive time on the **hardest** parts, not on generic CRUD.
+
+**What interviewers optimize for:**
+
+| Rubric pillar | What to demonstrate |
+|---|---|
+| Problem navigation | Scope in-process vs distributed vs L1+L2 |
+| Solution design | HashMap + DLL → optional Redis layer |
+| Technical excellence | O(1) operations, thread safety, sharding |
+| Communication | LRU vs LFU vs TTL trade-offs | |
+
+**Suggested opening script:**
+
+> "I'll design an LRU cache: O(1) get/put with HashMap + doubly linked list, then extend to distributed. My focus is the core data structure and eviction policy."
+
+**Pacing guide:**
+
+| Phase | Time | What to Cover |
+|-------|------|---------------|
+| Requirements | ~5 min | Functional + non-functional, scope, clarifying questions |
+| Core Entities | ~2 min | Primary data objects and relationships |
+| API Design | ~5 min | REST/RPC endpoints, request/response contracts |
+| Data Flow | ~5 min | End-to-end sequence for happy path |
+| High-Level Design | ~10–15 min | Architecture boxes-and-arrows |
+| Deep Dives | ~10 min | Bottlenecks, scaling, edge cases, trade-offs |
+| Capacity | woven in | Back-of-envelope QPS, storage, bandwidth |
+
+---
+
+## Requirements (~5 min)
 Design a cache that stores key-value pairs with a **fixed capacity**. When the cache is full and a new entry is inserted, evict the **Least Recently Used** item. Both `get` and `put` must run in **O(1)** average time.
 
 **Two interview flavors — clarify which one:**
@@ -49,7 +79,6 @@ Most **system design** interviews start at flavor B but expect you to explain fl
 
 ---
 
-## 2. Requirements Clarification
 
 ### Clarifying Questions to Ask
 
@@ -126,8 +155,7 @@ mindmap
 
 ---
 
-## 3. Capacity Estimation
-
+## Capacity & Sizing
 Assume **API response cache** for a social feed service: 50M DAU, 200K QPS read, 80% cacheable.
 
 ### Memory Sizing
@@ -172,8 +200,7 @@ If hot set > cache size:
 
 ---
 
-## 4. API Design
-
+## API / System Interface (~5 min)
 ### 4.1 Core Operations
 
 #### `GET /cache/{key}`
@@ -316,8 +343,19 @@ Updating timestamp on get is O(1), but finding **minimum timestamp on eviction**
 
 ---
 
-## 6. High-Level Architecture
+## Data Flow (~5 min)
 
+Walk the **happy path** end-to-end before drawing boxes. Use sequence diagrams in [High-Level Design](#high-level-design-1015-min) on the whiteboard.
+
+1. Client / producer initiates the primary action
+2. API validates auth and schema
+3. Core service persists state and enqueues async work
+4. Workers / cache / CDN serve scale paths
+5. Webhooks or polls confirm completion
+
+---
+
+## High-Level Design (~10–15 min)
 ### 6.1 Single-Process LRU (OOD Interview)
 
 ```mermaid
@@ -360,7 +398,9 @@ Each shard runs an **independent LRU** on its key subset. Global LRU order is **
 
 ---
 
-## 7. Deep Dive: O(1) In-Memory LRU
+## Deep Dives (~10 min)
+
+### 7.1 O(1) In-Memory LRU
 
 ### 7.1 Java Implementation (Interview-Ready)
 
@@ -478,7 +518,7 @@ Use eviction listener to close file descriptors, invalidate downstream indexes, 
 
 ---
 
-## 8. Deep Dive: Thread Safety & Concurrency
+### 7.2 Thread Safety & Concurrency
 
 ### 8.1 Single Lock (Simple)
 
@@ -518,7 +558,7 @@ Segmented LRU: eviction is **per-segment approximate global LRU** — good enoug
 
 ---
 
-## 9. Deep Dive: Distributed LRU Cache
+### 7.3 Distributed LRU Cache
 
 ### 9.1 Sharding Keys
 
@@ -567,7 +607,7 @@ Acceptable: cache is soft state; misses refill from DB
 
 ---
 
-## 10. Deep Dive: LRU vs Other Eviction Policies
+### 7.4 LRU vs Other Eviction Policies
 
 ### 10.1 Policy Comparison
 
@@ -617,7 +657,7 @@ Eviction priority (Redis `volatile-lru`): only keys with TTL participate; or `al
 
 ---
 
-## 11. Deep Dive: Multi-Level Cache (L1 + L2)
+### 7.5 Multi-Level Cache (L1 + L2)
 
 Production apps often stack caches:
 
@@ -640,8 +680,7 @@ flowchart LR
 
 ---
 
-## 12. Scaling & Reliability
-
+### Scaling & Reliability
 ### 12.1 Scaling Checklist
 
 | Bottleneck | Solution |
@@ -676,8 +715,7 @@ Mitigation:
 
 ---
 
-## 13. Failure Modes & Edge Cases
-
+## Failure Modes & Resilience
 | Scenario | Impact | Mitigation |
 |----------|--------|------------|
 | Cache node crash | Miss spike | Replicas; cache-aside fallback to DB |
@@ -701,8 +739,7 @@ Fix:
 
 ---
 
-## 14. Trade-offs Summary
-
+## Trade-offs Summary
 | Decision | Option A | Option B | Recommendation |
 |----------|----------|----------|----------------|
 | Structure | HashMap + DLL | TreeMap by timestamp | **HashMap + DLL** for O(1) |
@@ -715,8 +752,7 @@ Fix:
 
 ---
 
-## 15. Interview Walkthrough Script
-
+## Interview Walkthrough Script
 ### Minutes 0–5: Clarify Scope
 
 > "I'll design both the core O(1) LRU structure and how it fits a distributed cache cluster. Capacity 5M keys, 160K read QPS, 92% hit ratio target, cache-aside from PostgreSQL."
@@ -745,8 +781,7 @@ Draw app servers → consistent hash → Redis cluster shards. Each shard runs a
 
 ---
 
-## 16. Follow-Up Questions
-
+## Follow-Up Questions
 | Question | Strong Answer |
 |----------|---------------|
 | "Implement LRU O(1)" | HashMap to nodes + doubly linked list; dummy head/tail |
@@ -762,8 +797,7 @@ Draw app servers → consistent hash → Redis cluster shards. Each shard runs a
 
 ---
 
-## 17. Real-World References
-
+## Real-World References
 | System | LRU Usage |
 |--------|-----------|
 | **Redis** | `allkeys-lru`, `volatile-lru` — approximate sampling |
@@ -784,3 +818,8 @@ Draw app servers → consistent hash → Redis cluster shards. Each shard runs a
 ---
 
 *Last updated: July 2026 | Hello Interview Framework | Big Tech System Design Series*
+---
+
+## Interview Cheat Sheet
+
+See [Interview Walkthrough Script](#interview-walkthrough-script) for timed delivery.
